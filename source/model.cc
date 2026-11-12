@@ -621,7 +621,11 @@ void Model::init_iface (void)
     M->_client = _midi->_client;
     M->_ipport = _midi->_ipport;
     M->_opport = _midi->_opport;
+#ifdef __linux__
     M->_seq    = _midi->_seq;
+#else
+    M->_midi_backend = 0;
+#endif
     M->_nasect = _nasect;
     M->_nkeybd = _nkeybd;
     M->_ndivis = _ndivis;
