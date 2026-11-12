@@ -170,3 +170,10 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Added a deliberately inert non-Linux `Imidi` thread stub so the translation unit has definitions while a native backend is not yet implemented. It does **not** enumerate devices, receive MIDI, or send MIDI. On Windows, USB-MIDI remains unavailable until the WinMM/MIDI Services implementation replaces this stub.
 - Initialized the Linux sequencer handle to null in the constructor. This also makes the existing Linux shutdown path deterministic if the sequencer was never opened.
 - This change is not yet validated by the Windows CI compile probe because `imidi.h` inherits from `A_thread` and the project still lacks a Windows build of `clthreads`. The next step is to establish that thread dependency, then include `imidi.cc` in the Windows compile target.
+
+
+### 2026-11-12 — Vendor the clthreads source for a Windows build probe
+
+- Imported the upstream `dmeliza/clthreads` source and its LGPL-2.1-or-later license into `third_party/clthreads/`, preserving copyright notices and documenting the exact upstream revision.
+- Extended Windows CI to compile the six library translation units and the non-Linux `source/imidi.cc` translation unit using MSYS2 UCRT64 with POSIX thread flags. This is intended to test whether the chosen MinGW runtime can support the existing worker API without rewriting Aeolus's thread model.
+- The imported dependency has not been modified. A successful compile would still not prove thread scheduling, cancellation, queue safety, or shutdown behaviour at runtime. The current Windows MIDI implementation remains a no-op stub.
