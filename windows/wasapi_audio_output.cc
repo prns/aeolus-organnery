@@ -16,7 +16,7 @@ bool AeolusWasapiOutput::open(Audio *audio, bool bform)
     if (_opened || !audio) return false;
     if (!_host.open(render, this)) return false;
 
-    if (!_audio || !audio->init_host(_host.sample_rate(),
+    if (!audio->init_host(_host.sample_rate(),
                                      _host.buffer_frames(),
                                      (int)_host.channels(), bform))
     {
