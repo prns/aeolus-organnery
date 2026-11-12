@@ -20,6 +20,8 @@
 
 #include "imidi.h"
 
+#ifdef __linux__
+
 
 
 Imidi::Imidi (Lfq_u32 *qnote, Lfq_u8 *qmidi, uint16_t *midimap, const char *appname) :
@@ -28,6 +30,9 @@ Imidi::Imidi (Lfq_u32 *qnote, Lfq_u8 *qmidi, uint16_t *midimap, const char *appn
     _qmidi (qmidi),
     _midimap (midimap),
     _appname (appname)
+#ifdef __linux__
+    , _handle (0)
+#endif
 {
 }
 
@@ -404,3 +409,21 @@ void Imidi::proc_midi (void)
     }
 }
 
+
+#else
+
+// Windows MIDI is provided by the WinMM backend in a subsequent porting
+// step. Keep this translation unit buildable without ALSA in the meantime.
+// This stub deliberately does not claim to enumerate or receive MIDI input.
+
+void Imidi::terminate (void)
+{
+    put_event (EV_EXIT, 1);
+}
+
+void Imidi::thr_main (void)
+{
+    send_event (EV_EXIT, 1);
+}
+
+#endif // __linux__
