@@ -11,7 +11,7 @@
 #include "../source/imidi.h"
 #include "../source/model.h"
 #include "../source/slave.h"
-#include "../source/tiface.h"
+#include "wiface.h"
 #include "wasapi_audio_output.h"
 
 // Global debug switch declared by source/global.h.
@@ -58,8 +58,8 @@ int main(int argc, char **argv)
         {
             printf("Aeolus Windows bootstrap\n"
                    "Usage: aeolus.exe [-u] [-B] [-N name] [-S stops] [-I instrument] [-W waves]\n"
-                   "This build uses WASAPI shared-mode audio and the text interface.\n"
-                   "Windows MIDI and the original graphical interface are not implemented yet.\n");
+                   "This build uses WASAPI shared-mode audio and a native Win32 organ console.\n"
+                   "WinMM MIDI input is supported when a device is present.\n");
             return 0;
         }
         else
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
     Model *model = new Model(&comm_queue, &midi_queue, audio->midimap(),
                              audio->appname(), stops, instr, waves, user_home);
     Slave *slave = new Slave();
-    Iface *iface = new Tiface(argc, argv);
+    Iface *iface = new Wiface(argc, argv);
     AeolusWasapiOutput output;
     g_output = &output;
 
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
     iface->thr_start(SCHED_OTHER, 0, 0);
     audio->start();
 
-    printf("Aeolus Windows bootstrap started. Press Ctrl+C to exit.\n");
+    printf("Aeolus Windows organ console started. Close the window or press Ctrl+C to exit.\n");
     bool audio_ok = output.run();
 
     output.stop();
