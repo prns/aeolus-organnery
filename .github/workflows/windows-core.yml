@@ -110,11 +110,27 @@ jobs:
           mkdir -p build/stops-extract
           cd build/stops-extract
           ar x ../windows-package/stops.deb data.tar.xz
-          tar -xf data.tar.xz -C ../windows-package --strip-components=3 ./usr/share/aeolus/stops
+          tar -tf data.tar.xz | grep -E '/definition      - name: Upload Windows standalone folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: aeolus-windows-x64-package
+          path: build/windows-package/**
+      - name: Upload Windows core archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: aeolus-windows-x64-core
+          path: build/windows-core/libaeolus-core.a
+ | head -20
+          tar -xf data.tar.xz -C .
           tar -xOf data.tar.xz ./usr/share/doc/stops/copyright > ../windows-package/stops-COPYRIGHT
           cd ../..
-          test -f build/windows-package/stops/Aeolus/definition
+          definition=$(find build/stops-extract -type f -path '*/stops/Aeolus/definition' -print -quit)
+          test -n "$definition"
+          stops_root=${definition%/Aeolus/definition}
+          mkdir -p build/windows-package/stops
+          cp -a "$stops_root/." build/windows-package/stops/
           mkdir -p build/windows-package/stops/waves
+          test -f build/windows-package/stops/Aeolus/definition
           rm build/windows-package/stops.deb
       - name: Upload Windows standalone folder
         uses: actions/upload-artifact@v4
