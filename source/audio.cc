@@ -331,18 +331,6 @@ int Audio::jack_callback (jack_nframes_t nframes)
 }
 
 
-void Audio::render_block (float **outputs, int nframes)
-{
-    proc_queue (_qnote);
-    proc_queue (_qcomm);
-    proc_keys1 ();
-    proc_keys2 ();
-    for (int i = 0; i < _nplay; i++) _outbuf [i] = outputs [i];
-    proc_synth (nframes);
-    proc_mesg ();
-}
-
-
 void Audio::proc_jmidi (int tmax)
 {
     int                 c, f, m, n, t, v;
@@ -491,6 +479,19 @@ void Audio::proc_jmidi (int tmax)
 
 
 #endif // !_WIN32
+
+
+void Audio::render_block (float **outputs, int nframes)
+{
+    proc_queue (_qnote);
+    proc_queue (_qcomm);
+    proc_keys1 ();
+    proc_keys2 ();
+    for (int i = 0; i < _nplay; i++) _outbuf [i] = outputs [i];
+    proc_synth (nframes);
+    proc_mesg ();
+}
+
 
 
 #ifdef _WIN32
