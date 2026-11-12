@@ -133,3 +133,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Tightened `Audio::init_host()` so the channel count must match the selected render topology: stereo requires exactly 2 outputs; four-channel B-format requires exactly 4. This prevents the B-format renderer from writing to channels that the host did not supply.
 - Host setup still does not open or start a device. A future WASAPI adapter must request a compatible 2- or 4-channel float output layout, or add an explicit channel-mapping/conversion stage. It must also respect the synthesizer's fixed internal `PERIOD` processing quantum; arbitrary WASAPI packet sizes cannot yet be assumed safe.
 - No compiler or runtime test was run for this change.
+
+
+### 2026-11-12 — Enforce the synthesizer processing quantum
+
+- The renderer's internal `PERIOD` is 64 frames (`source/rankwave.h`). `proc_synth()` always computes complete 64-frame blocks and writes a complete block to each output pointer. A host block that is not a multiple of 64 would therefore make the current render path unsafe (potentially writing beyond the host buffer).
+- `Audio::init_host()` now rejects a requested host block size that is not a multiple of `PERIOD`, in addition to checking sample rate and matching stereo/four-channel output topology.
+- WASAPI integration must negotiate a stable callback packet size that is a multiple of 64 frames (for example through the supported shared-mode engine-period API where available), or the renderer must first be redesigned to handle partial quanta with correct MIDI timestamp continuity. Do not simply pad every callback: that would alter the effective audio timeline.
+- This is a defensive validation, not proof of a compatible WASAPI endpoint. No Windows build or device test has been performed.
