@@ -22,7 +22,7 @@ jobs:
         with:
           msystem: UCRT64
           update: true
-          install: mingw-w64-ucrt-x86_64-gcc
+          install: mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-readline
       - name: Compile portable synthesis and organ-model units
         run: |
           mkdir -p build/windows-core
@@ -49,6 +49,11 @@ jobs:
               -Isource -Ithird_party/clthreads -c "source/$unit.cc" \
               -o "build/windows-clthreads/$unit.o"
           done
+      - name: Compile portable text interface
+        run: |
+          g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread \\
+            -Isource -Ithird_party/clthreads -c source/tiface.cc \\
+            -o build/windows-clthreads/tiface.o
       - name: Upload Windows core archive
         uses: actions/upload-artifact@v4
         with:
