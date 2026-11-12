@@ -9,7 +9,7 @@ WasapiAudioHost::WasapiAudioHost() :
     _enumerator(0), _device(0), _audio_client(0), _render_client(0),
     _mix_format(0), _event(0), _stopping(0), _com_initialized(false),
     _opened(false), _sample_rate(0), _channels(0), _buffer_frames(0),
-    _callback(0), _context(0), _interleaved(0)
+    _callback(0), _context(0)
 {
     for (unsigned int i = 0; i < 4; ++i) _planes[i] = 0;
 }
@@ -47,7 +47,8 @@ bool WasapiAudioHost::open(RenderCallback callback, void *context)
     {
         const WAVEFORMATEXTENSIBLE *ext =
             reinterpret_cast<const WAVEFORMATEXTENSIBLE *>(_mix_format);
-        is_float = IsEqualGUID(ext->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) != 0;
+        is_float = IsEqualGUID(ext->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) != 0 &&
+                   ext->Samples.wValidBitsPerSample == 32;
     }
 
     _channels = _mix_format->nChannels;
@@ -55,6 +56,7 @@ bool WasapiAudioHost::open(RenderCallback callback, void *context)
     if (!is_float || _mix_format->wBitsPerSample != 32 ||
         (_channels != 2 && _channels != 4) ||
         _mix_format->nBlockAlign != _channels * sizeof(float) ||
+        _mix_format->nAvgBytesPerSec != _sample_rate * _mix_format->nBlockAlign ||
         !_sample_rate)
         return release_all(), false;
 
@@ -77,9 +79,6 @@ bool WasapiAudioHost::open(RenderCallback callback, void *context)
         _planes[i] = new (std::nothrow) float[_buffer_frames];
         if (!_planes[i]) return release_all(), false;
     }
-    _interleaved = new (std::nothrow) float[_buffer_frames * _channels];
-    if (!_interleaved) return release_all(), false;
-
     _callback = callback;
     _context = context;
     _stopping = 0;
@@ -134,8 +133,6 @@ void WasapiAudioHost::stop()
 bool WasapiAudioHost::release_all()
 {
     bool uninit = _com_initialized;
-    delete[] _interleaved;
-    _interleaved = 0;
     for (unsigned int i = 0; i < 4; ++i)
     {
         delete[] _planes[i];
