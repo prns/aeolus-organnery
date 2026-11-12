@@ -14,6 +14,9 @@
 #include "../source/tiface.h"
 #include "wasapi_audio_output.h"
 
+// Global debug switch declared by source/global.h.
+bool x_opt = false;
+
 static AeolusWasapiOutput *g_output = 0;
 
 static BOOL WINAPI console_control(DWORD type)
