@@ -107,6 +107,19 @@ void Audio::init_audio (void)
 }
 
 
+bool Audio::init_host (unsigned int fsamp, unsigned int fsize, int nplay, bool bform)
+{
+    if (!fsamp || !fsize || (nplay != 2 && nplay != 4)) return false;
+
+    _fsamp = fsamp;
+    _fsize = fsize;
+    _nplay = nplay;
+    _bform = bform;
+    init_audio ();
+    return true;
+}
+
+
 void Audio::start (void)
 {
     M_audio_info  *M;
