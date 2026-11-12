@@ -229,3 +229,12 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - `stop()` signals the event so a blocking render loop can exit; COM/device setup and teardown are expected on the same thread that calls `open()` and `run()`.
 - The new source is added to the Windows CI compile pass. This is a backend component, not yet connected to the application startup or an `.exe`.
 - Current limitations are explicit: shared mode only; default endpoint only; float32 mix format only; stereo or four-channel output only; no endpoint hot-plug/recovery, device selector, exclusive mode, ASIO, or real-device playback validation. Unsupported mix formats fail cleanly rather than being misinterpreted.
+
+
+### 2026-11-12 — Connect WASAPI to the Aeolus renderer
+
+- Added `AeolusWasapiOutput` as the narrow host adapter between `WasapiAudioHost` and the existing `Audio::render_host_packet()` entry point.
+- Opening the adapter now negotiates the Windows endpoint first, then configures the Aeolus engine with the endpoint's sample rate, channel count, and buffer size. The existing 64-frame FIFO remains responsible for packet/quantum mismatch.
+- The application lifecycle remains intentionally explicit: after opening, the future Windows application must connect the model/audio message routes and call `Audio::start()`; it then calls the adapter's blocking `run()` on the same thread used for COM initialization. `stop()` may be signalled from another thread.
+- Added a CI compile step for this adapter. It checks the source-level connection but does not instantiate an audio device or prove playback.
+- Device selection, exclusive mode, sample format conversion for non-float endpoints, device-loss recovery, and the application entry point are still outstanding.
