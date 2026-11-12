@@ -36,6 +36,9 @@ Audio::Audio (const char *name, Lfq_u32 *qnote, Lfq_u32 *qcomm) :
     _qmidi (0),
 #endif
     _running (false),
+#ifdef _WIN32
+    _host_fifo (0),
+#endif
 #ifdef __linux__
     _alsa_handle (0),
 #endif
@@ -67,6 +70,9 @@ Audio::~Audio (void)
     for (i = 0; i < _nasect; i++) delete _asectp [i];
     for (i = 0; i < _ndivis; i++) delete _divisp [i];
     _reverb.fini ();
+#ifdef _WIN32
+    delete _host_fifo;
+#endif
 }
 
 
@@ -111,6 +117,15 @@ bool Audio::init_host (unsigned int fsamp, unsigned int fsize, int nplay, bool b
 {
     if (!fsamp || !fsize || nplay != (bform ? 4 : 2)) return false;
 
+    AudioQuantumFifo *fifo = new AudioQuantumFifo (nplay);
+    if (!fifo->valid ())
+    {
+        delete fifo;
+        return false;
+    }
+
+    delete _host_fifo;
+    _host_fifo = fifo;
     _fsamp = fsamp;
     _fsize = fsize;
     _nplay = nplay;
@@ -314,6 +329,21 @@ int Audio::jack_callback (jack_nframes_t nframes)
     render_block (outputs, nframes);
     return 0;
 }
+
+
+#ifdef _WIN32
+void Audio::render_host_quantum (void *context, float **outputs, int nframes)
+{
+    static_cast<Audio *>(context)->render_block (outputs, nframes);
+}
+
+
+bool Audio::render_host_packet (float **outputs, unsigned int nframes)
+{
+    return _host_fifo &&
+           _host_fifo->pull (outputs, nframes, render_host_quantum, this);
+}
+#endif
 
 
 void Audio::render_block (float **outputs, int nframes)
