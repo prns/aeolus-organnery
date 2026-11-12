@@ -67,7 +67,7 @@ Keep the synthesis/model code independent of the operating system. Put platform 
 
 ## Current status
 
-The Windows port is still incomplete; there is no standalone Windows executable and no native GUI or functional Windows MIDI backend yet.
+The Windows port is still incomplete. A first linked Windows x64 console bootstrap executable now builds in CI, but it is not yet the full standalone Aeolus application: it has no native GUI, no functional Windows MIDI backend, and has not yet been runtime-tested on a physical Windows system.
 
 Implemented and verified so far:
 
@@ -78,14 +78,14 @@ Implemented and verified so far:
 
 Not yet implemented or verified:
 
-- A complete Windows application entry point and lifecycle.
+- A production-ready Windows application entry point and lifecycle (a first console bootstrap now links in CI).
 - A native Windows GUI preserving the original organ console.
 - Windows USB-MIDI input/output and device selection.
 - ASIO support.
 - Runtime testing against physical Windows audio and MIDI devices.
-- A complete linked and packaged `.exe`.
+- A fully packaged, self-contained `.exe` with instrument data and verified runtime dependencies.
 
-The CI result is a successful core/host compilation probe, not a complete Windows application build. Continue implementing and testing each milestone in separate commits on the `windows-port` branch.
+The successful CI run [43215745809](https://github.com/prns/aeolus-organnery/actions/runs/43215745809) now also links `build/windows-app/aeolus.exe` and uploads it as the `aeolus-windows-x64-bootstrap` artifact. This is a console bootstrap, not the final GUI application. The artifact is available from the Actions run; it has not yet been tested on a clean Windows machine.
 
 ## Work log
 
@@ -271,3 +271,10 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Fixed a Windows header macro collision (NO_ERROR) by including the Aeolus audio declarations before the WASAPI/Windows headers in the adapter translation unit.
 - GitHub Actions run [43205399434](https://github.com/prns/aeolus-organnery/actions/runs/43205399434) passed, including compilation of the WASAPI host and Aeolus adapter, plus the existing core, MIDI lifecycle, FIFO, and float-interleave checks.
 - This is compile/test coverage for the host adapter, not a linked application or a physical audio-device test. The Windows application entry point, native GUI, and functional MIDI backend remain unimplemented.
+
+### 2026-11-12 — First linked Windows bootstrap executable
+
+- Added `windows/main.cc` as a Windows console entry point that wires the model, audio engine, text interface, and WASAPI output adapter.
+- Added a CI link step for `aeolus.exe`; the successful run [43215745809](https://github.com/prns/aeolus-organnery/actions/runs/43215745809) uploaded the bootstrap artifact.
+- This proves compile and link only. The console interface still depends on the readline runtime, the instrument/data files are not packaged, the MIDI service is still a stub on Windows, and no physical-device runtime test has been performed.
+- The next build improvement is static linking/runtime dependency verification; GUI and USB-MIDI remain separate major milestones.
