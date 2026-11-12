@@ -126,3 +126,10 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Added public `Audio::init_host(fsamp, fsize, nplay, bform)`. It validates a non-zero sample rate and block size and accepts the existing two-channel or four-channel render layouts, sets the engine's host format, and initializes the reverb/sections through the same `init_audio()` path used by Linux backends.
 - It deliberately does not allocate output buffers, start a thread, or open a device: a host such as WASAPI owns those responsibilities and supplies its output buffers to `render_block()`.
 - This is an engine setup seam, not a WASAPI implementation. There is not yet a Windows device lifecycle, callback/thread, device enumeration, sample-rate negotiation, or USB-MIDI input backend. No Windows build or runtime test has been performed.
+
+
+### 2026-11-12 — Validate host channel topology
+
+- Tightened `Audio::init_host()` so the channel count must match the selected render topology: stereo requires exactly 2 outputs; four-channel B-format requires exactly 4. This prevents the B-format renderer from writing to channels that the host did not supply.
+- Host setup still does not open or start a device. A future WASAPI adapter must request a compatible 2- or 4-channel float output layout, or add an explicit channel-mapping/conversion stage. It must also respect the synthesizer's fixed internal `PERIOD` processing quantum; arbitrary WASAPI packet sizes cannot yet be assumed safe.
+- No compiler or runtime test was run for this change.
