@@ -149,3 +149,10 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - The job compiles six synthesis/support translation units (`exp2ap`, `rngen`, `scales`, `asection`, `reverb`, `rankwave`) and archives their object files as `libaeolus-core.a`. The artifact is uploaded as `aeolus-windows-x64-core`.
 - This is intentionally a **core compilation probe**, not the Aeolus Windows application: it does not link the model/audio/threading/app layers, does not include a GUI, WASAPI, ASIO, or USB-MIDI, and does not produce `Aeolus.exe`. Its purpose is to obtain the first real MSYS2/Windows compiler feedback on portable synthesis code before attempting the full application.
 - The workflow runs automatically on the next push to `windows-port` that changes source/windows/workflow files, and can also be started manually from GitHub Actions. Its result must be checked before calling the core Windows-compatible.
+
+
+### 2026-11-12 — Expand the Windows compile probe
+
+- Extended the Windows x64 CI compile set beyond the six low-level synthesis files to include `addsynth.cc` and `division.cc`, which cover organ stop definitions and division mixing.
+- Replaced the legacy `__BYTE_ORDER` checks in `addsynth.cc` with the project's portable `AEOLUS_BYTE_ORDER` macros. This was necessary because the Windows portability macros introduced earlier were not yet used by this source file's binary read/write code.
+- The CI artifact remains a static core archive, not the complete application. The application entry point, thread runtime, audio/MIDI backends, and GUI remain outstanding.
