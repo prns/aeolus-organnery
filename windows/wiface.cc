@@ -1,5 +1,6 @@
 #include "wiface.h"
 #include <windows.h>
+#include <windowsx.h>
 #include <stdio.h>
 #include <string.h>
 
