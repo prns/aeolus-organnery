@@ -22,15 +22,15 @@ jobs:
           msystem: UCRT64
           update: true
           install: mingw-w64-ucrt-x86_64-gcc
-      - name: Compile portable synthesis units
+      - name: Compile portable synthesis and organ-model units
         run: |
           mkdir -p build/windows-core
-          for unit in exp2ap rngen scales asection reverb rankwave; do
+          for unit in exp2ap rngen scales asection reverb rankwave addsynth division; do
             g++ -std=gnu++11 -O2 -Wall -Wextra -Isource \
               -c "source/$unit.cc" -o "build/windows-core/$unit.o"
           done
           ar rcs build/windows-core/libaeolus-core.a build/windows-core/*.o
-      - name: Upload core archive
+      - name: Upload Windows core archive
         uses: actions/upload-artifact@v4
         with:
           name: aeolus-windows-x64-core
