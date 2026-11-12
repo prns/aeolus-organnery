@@ -106,10 +106,10 @@ int main(int argc, char **argv)
             waves_attr == INVALID_FILE_ATTRIBUTES ||
             !(waves_attr & FILE_ATTRIBUTE_DIRECTORY))
         {
-            fprintf(stderr, "Aeolus: bundled instrument data is missing beside the executable.\\n");
+            fprintf(stderr, "Aeolus: bundled instrument data is missing beside the executable.\n");
             return 1;
         }
-        printf("Aeolus package data found beside executable.\\n");
+        printf("Aeolus package data found beside executable.\n");
         return 0;
     }
 
