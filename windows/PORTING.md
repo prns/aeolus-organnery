@@ -146,7 +146,7 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 ### 2026-11-12 — First automated Windows x64 compile job
 
 - Added `.github/workflows/windows-core.yml`, a GitHub Actions job on `windows-latest` using the MSYS2 UCRT64 x64 GCC toolchain.
-- The job compiles six synthesis/support translation units (`exp2ap`, `rngen`, `scales`, `asection`, `reverb`, `rankwave`) and archives their object files as `libaeolus-core.a`. The artifact is uploaded as `aeolus-windows-x64-core`.
+- The job compiles nine synthesis/support translation units (`exp2ap`, `rngen`, `scales`, `asection`, `reverb`, `rankwave`, `addsynth`, `division`, `lfqueue`) and archives their object files as `libaeolus-core.a`. The artifact is uploaded as `aeolus-windows-x64-core`.
 - This is intentionally a **core compilation probe**, not the Aeolus Windows application: it does not link the model/audio/threading/app layers, does not include a GUI, WASAPI, ASIO, or USB-MIDI, and does not produce `Aeolus.exe`. Its purpose is to obtain the first real MSYS2/Windows compiler feedback on portable synthesis code before attempting the full application.
 - The workflow runs automatically on the next push to `windows-port` that changes source/windows/workflow files, and can also be started manually from GitHub Actions. Its result must be checked before calling the core Windows-compatible.
 
@@ -156,3 +156,9 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Extended the Windows x64 CI compile set beyond the six low-level synthesis files to include `addsynth.cc` and `division.cc`, which cover organ stop definitions and division mixing.
 - Replaced the legacy `__BYTE_ORDER` checks in `addsynth.cc` with the project's portable `AEOLUS_BYTE_ORDER` macros. This was necessary because the Windows portability macros introduced earlier were not yet used by this source file's binary read/write code.
 - The CI artifact remains a static core archive, not the complete application. The application entry point, thread runtime, audio/MIDI backends, and GUI remain outstanding.
+
+
+### 2026-11-12 — Compile the lock-free queue implementation
+
+- Added `lfqueue.cc` to the Windows x64 CI compile probe. This covers the lock-free note/command queue storage used to hand events between the audio, model, and MIDI services, without requiring the external thread library.
+- The probe still does not compile the worker classes: `Model`, `Slave`, `Audio`, and `Imidi` depend on `clthreads`, and `Imidi` still contains the ALSA-only implementation. Those are the next dependency boundaries to resolve.
