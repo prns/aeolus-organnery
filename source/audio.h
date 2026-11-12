@@ -50,6 +50,10 @@ public:
     void  init_jack (const char *server, bool bform, Lfq_u8 *qmidi);
 #endif
     void  start (void);
+    // Configure the synthesis engine for a host-managed audio device.
+    // The host supplies output buffers to render_block(); no buffers or device
+    // thread are allocated here.
+    bool  init_host (unsigned int fsamp, unsigned int fsize, int nplay, bool bform);
     // Render one host-provided audio block. The caller owns the output buffers.
     // This entry point contains no device-API calls and is suitable for WASAPI.
     void  render_block (float **outputs, int nframes);
