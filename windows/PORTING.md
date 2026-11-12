@@ -162,3 +162,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 
 - Added `lfqueue.cc` to the Windows x64 CI compile probe. This covers the lock-free note/command queue storage used to hand events between the audio, model, and MIDI services, without requiring the external thread library.
 - The probe still does not compile the worker classes: `Model`, `Slave`, `Audio`, and `Imidi` depend on `clthreads`, and `Imidi` still contains the ALSA-only implementation. Those are the next dependency boundaries to resolve.
+
+
+### 2026-11-12 — Separate the ALSA MIDI translation unit
+
+- Wrapped the existing ALSA sequencer implementation in `source/imidi.cc` with the Linux platform guard. This removes direct ALSA symbol references from the non-Linux compilation branch and prevents the Linux implementation from leaking into a future Windows build.
+- Added a deliberately inert non-Linux `Imidi` thread stub so the translation unit has definitions while a native backend is not yet implemented. It does **not** enumerate devices, receive MIDI, or send MIDI. On Windows, USB-MIDI remains unavailable until the WinMM/MIDI Services implementation replaces this stub.
+- Initialized the Linux sequencer handle to null in the constructor. This also makes the existing Linux shutdown path deterministic if the sequencer was never opened.
+- This change is not yet validated by the Windows CI compile probe because `imidi.h` inherits from `A_thread` and the project still lacks a Windows build of `clthreads`. The next step is to establish that thread dependency, then include `imidi.cc` in the Windows compile target.
