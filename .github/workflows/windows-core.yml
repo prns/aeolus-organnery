@@ -43,6 +43,11 @@ jobs:
           g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread \
             -Isource -Ithird_party/clthreads -c source/imidi.cc \
             -o build/windows-clthreads/imidi.o
+          for unit in model slave audio; do
+            g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread \
+              -Isource -Ithird_party/clthreads -c "source/$unit.cc" \
+              -o "build/windows-clthreads/$unit.o"
+          done
       - name: Upload Windows core archive
         uses: actions/upload-artifact@v4
         with:
