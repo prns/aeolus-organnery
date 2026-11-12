@@ -76,22 +76,22 @@ int main(int argc, char **argv)
     if (module_length == 0 ||
         module_length >= sizeof(module_path) / sizeof(module_path[0]))
     {
-        fprintf(stderr, "Aeolus: could not determine the executable directory.\\n");
+        fprintf(stderr, "Aeolus: could not determine the executable directory.\n");
         return 1;
     }
-    wchar_t *last_separator = wcsrchr(module_path, L'\\\\');
+    wchar_t *last_separator = wcsrchr(module_path, L'\\');
     wchar_t *last_forward = wcsrchr(module_path, L'/');
     if (last_forward && (!last_separator || last_forward > last_separator))
         last_separator = last_forward;
     if (!last_separator)
     {
-        fprintf(stderr, "Aeolus: executable path has no directory.\\n");
+        fprintf(stderr, "Aeolus: executable path has no directory.\n");
         return 1;
     }
-    *last_separator = L'\\0';
+    *last_separator = L'\0';
     if (!SetCurrentDirectoryW(module_path))
     {
-        fprintf(stderr, "Aeolus: could not set the executable directory as working directory.\\n");
+        fprintf(stderr, "Aeolus: could not set the executable directory as working directory.\n");
         return 1;
     }
 
