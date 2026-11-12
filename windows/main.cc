@@ -38,11 +38,13 @@ int main(int argc, char **argv)
     const char *waves = "waves";
     bool user_home = false;
     bool bform = false;
+    bool check_data = false;
 
     for (int i = 1; i < argc; ++i)
     {
         if (!strcmp(argv[i], "-u")) user_home = true;
         else if (!strcmp(argv[i], "-B")) bform = true;
+        else if (!strcmp(argv[i], "--check-data")) check_data = true;
         else if ((!strcmp(argv[i], "-N") || !strcmp(argv[i], "-S") ||
                   !strcmp(argv[i], "-I") || !strcmp(argv[i], "-W")) && i + 1 < argc)
         {
@@ -93,6 +95,22 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "Aeolus: could not set the executable directory as working directory.\n");
         return 1;
+    }
+
+    if (check_data)
+    {
+        DWORD definition_attr = GetFileAttributesW(L"stops\\\\Aeolus\\\\definition");
+        DWORD waves_attr = GetFileAttributesW(L"stops\\\\waves");
+        if (definition_attr == INVALID_FILE_ATTRIBUTES ||
+            (definition_attr & FILE_ATTRIBUTE_DIRECTORY) ||
+            waves_attr == INVALID_FILE_ATTRIBUTES ||
+            !(waves_attr & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            fprintf(stderr, "Aeolus: bundled instrument data is missing beside the executable.\\n");
+            return 1;
+        }
+        printf("Aeolus package data found beside executable.\\n");
+        return 0;
     }
 
     Lfq_u32 note_queue(256);
