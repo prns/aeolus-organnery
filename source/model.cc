@@ -2018,6 +2018,7 @@ int Model::write_presets (void)
 }
 
 
+#ifdef __linux__
 void Model::midi_tx_note(int ch, int key, int vel, bool state)
 {
     snd_seq_event_t ev;
@@ -2072,3 +2073,11 @@ void Model::midi_tx_sysex(int data_len, uint8_t *data_ptr)
     snd_seq_ev_set_sysex(&ev, data_len, data_ptr);
     snd_seq_event_output_direct(_midi->_seq, &ev);
 }
+
+#else
+// The Windows MIDI backend will provide these operations. Keep the model
+// interface platform-neutral while the native backend is being implemented.
+void Model::midi_tx_note(int, int, int, bool) {}
+void Model::midi_tx_cc(int, int, int) {}
+void Model::midi_tx_sysex(int, uint8_t *) {}
+#endif
