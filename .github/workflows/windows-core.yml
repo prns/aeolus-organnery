@@ -110,7 +110,15 @@ jobs:
           mkdir -p build/stops-extract
           cd build/stops-extract
           ar x ../windows-package/stops.deb data.tar.xz
-          tar -tf data.tar.xz | grep -E '/definition      - name: Upload Windows standalone folder
+          tar -tf data.tar.xz | grep definition || true
+          tar -xf data.tar.xz -C ../windows-package --strip-components=3
+          tar -xOf data.tar.xz ./usr/share/doc/stops/copyright > ../windows-package/stops-COPYRIGHT
+          cd ../..
+          find build/windows-package -type f -name definition
+          test -n "$(find build/windows-package -type f -name definition -print -quit)"
+          mkdir -p build/windows-package/stops/waves
+          rm build/windows-package/stops.deb
+      - name: Upload Windows standalone folder
         uses: actions/upload-artifact@v4
         with:
           name: aeolus-windows-x64-package
