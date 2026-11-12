@@ -88,3 +88,11 @@ This file records the initial technical assessment and intended sequence only. N
 ### Source inventory clarification
 
 The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. These are **Aeolus GUI windows** for audio and MIDI settings, implemented using `clxclient` and X11; they are not Windows audio or Windows MIDI backends.
+
+### 2026-11-12 — Remove unconditional ALSA dependency from shared messages
+
+- Guarded the ALSA header include in `source/messages.h` so non-Linux compilation of shared model/message declarations does not require ALSA development headers.
+- Kept the Linux `snd_seq_t` fields unchanged under `__linux__`; non-Linux message layouts now expose opaque backend pointers instead.
+- Guarded the ALSA sequencer transmit implementation in `source/model.cc`. Non-Linux builds retain the model-facing MIDI transmit methods as temporary no-op stubs until the native Windows MIDI service is connected.
+- This is an intermediate portability boundary, not functional Windows MIDI support. The Windows MIDI backend must replace these stubs before the port can be considered feature-complete.
+- No Windows compiler or build environment is available in this repository action, so compilation remains unverified.
