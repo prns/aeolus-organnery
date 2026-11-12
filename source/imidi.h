@@ -23,6 +23,11 @@
 
 
 #include <stdlib.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <mmsystem.h>
+#include <atomic>
+#endif
 #include <stdio.h>
 #include <clthreads.h>
 #ifdef __linux__
@@ -70,6 +75,15 @@ private:
     int             _client;
     int             _ipport;
     int             _opport;
+#ifdef _WIN32
+    HMIDIIN         _win_input;
+    std::atomic<bool> _win_running;
+    std::atomic<unsigned> _win_write;
+    std::atomic<unsigned> _win_read;
+    DWORD           _win_messages [256];
+    static void CALLBACK midi_callback (HMIDIIN, UINT, DWORD_PTR, DWORD_PTR, DWORD_PTR);
+    void process_win_message (DWORD);
+#endif
 };
 
 
