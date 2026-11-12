@@ -14,5 +14,5 @@ int main (void)
     uint16_t midimap [16] = { 0 };
 
     Imidi midi (&qnote, &qmidi, midimap, "Aeolus");
-    return midi.name ()[0] == 'I' ? 1 : 0;
+    return midi.name ()[0] == 'I' ? 0 : 1;
 }
