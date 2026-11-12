@@ -412,9 +412,9 @@ void Imidi::proc_midi (void)
 
 #else
 
-// Temporary non-Linux lifecycle stub. This keeps the Imidi object linkable
-// while the native Windows MIDI implementation is developed; it does not
-// enumerate devices or provide MIDI input/output.
+// Windows lifecycle backend. MIDI device enumeration and WinMM input/output
+// are still pending; publish an empty MIDI endpoint so the model can complete
+// startup and the audio engine can run without a MIDI device.
 Imidi::Imidi (Lfq_u32 *qnote, Lfq_u8 *qmidi, uint16_t *midimap, const char *appname) :
     A_thread ("Imidi"),
     _qnote (qnote),
@@ -438,6 +438,16 @@ void Imidi::terminate (void)
 
 void Imidi::thr_main (void)
 {
+    M_midi_info *M = new M_midi_info ();
+    M->_client = 0;
+    M->_ipport = 0;
+    M->_opport = 0;
+    M->_backend = 0;
+    memcpy (M->_chbits, _midimap, 16 * sizeof (uint16_t));
+    send_event (TO_MODEL, M);
+
+    while (get_event () != EV_EXIT)
+        ;
     send_event (EV_EXIT, 1);
 }
 
