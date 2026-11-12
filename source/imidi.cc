@@ -412,7 +412,26 @@ void Imidi::proc_midi (void)
 
 #else
 
-// Windows MIDI is provided by the WinMM backend in a subsequent porting
+// Temporary non-Linux lifecycle stub. This keeps the Imidi object linkable
+// while the native Windows MIDI implementation is developed; it does not
+// enumerate devices or provide MIDI input/output.
+Imidi::Imidi (Lfq_u32 *qnote, Lfq_u8 *qmidi, uint16_t *midimap, const char *appname) :
+    A_thread ("Imidi"),
+    _qnote (qnote),
+    _qmidi (qmidi),
+    _midimap (midimap),
+    _appname (appname),
+    _client (0),
+    _ipport (0),
+    _opport (0)
+{
+}
+
+Imidi::~Imidi (void)
+{
+}
+
+ // Windows MIDI is provided by a native backend in a subsequent porting
 // step. Keep this translation unit buildable without ALSA in the meantime.
 // This stub deliberately does not claim to enumerate or receive MIDI input.
 
