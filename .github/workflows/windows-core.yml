@@ -45,6 +45,7 @@ jobs:
             -o build/windows-clthreads/imidi.o
           for unit in model slave audio; do
             g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread \
+              -DVERSION='"0.9.10"' \
               -Isource -Ithird_party/clthreads -c "source/$unit.cc" \
               -o "build/windows-clthreads/$unit.o"
           done
