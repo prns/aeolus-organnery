@@ -1,6 +1,6 @@
 #ifdef _WIN32
-#include "wasapi_audio_output.h"
 #include "../source/audio.h"
+#include "wasapi_audio_output.h"
 
 AeolusWasapiOutput::AeolusWasapiOutput() : _audio(0), _opened(false)
 {
