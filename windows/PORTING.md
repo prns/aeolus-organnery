@@ -199,3 +199,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - The follow-up run `43198798624` adds a small Windows executable smoke test that constructs and destroys the non-Linux `Imidi` object while linking the actual queue and clthreads objects. This is intended to catch missing constructor, destructor, vtable, and dependency symbols that a compile-only test cannot detect. The smoke test does not start a thread and does not test MIDI I/O.
 - A successful smoke-test executable is only a link/lifecycle check for this narrow class boundary. It is not `Aeolus.exe`, and it does not validate the full application startup, audio rendering, MIDI devices, or GUI.
 - The next major audio step remains a native WASAPI host. Before integrating it, retain the 64-frame processing constraint and add explicit buffering between arbitrary endpoint packet sizes and the engine's render quantum if endpoint negotiation cannot guarantee compatible packets.
+
+
+### 2026-11-12 — Host audio packet/quantum adapter
+
+- Added `windows/audio_quantum_fifo.h`, a small allocation-free adapter that serves arbitrary planar-float host packet sizes while invoking the existing Aeolus renderer only in complete 64-frame quanta.
+- The adapter keeps any unused tail of a rendered quantum for the next device packet. This preserves sample continuity when WASAPI packet lengths are not multiples of 64; it does not pad callbacks or skip synthesis frames.
+- Added a deterministic test using packet sizes 13, 79, 1, 127, 64, and 3 frames. It checks left/right sample continuity across callback boundaries and verifies that only full 64-frame blocks are rendered.
+- Added the test to the Windows x64 GitHub Actions workflow. This validates the packet adaptation logic only; no WASAPI device client, COM initialization, endpoint enumeration, device format conversion, or real-time playback has been implemented yet.
