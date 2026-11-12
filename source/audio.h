@@ -35,6 +35,9 @@
 #include "lfqueue.h"
 #include "reverb.h"
 #include "global.h"
+#ifdef _WIN32
+#include "../windows/audio_quantum_fifo.h"
+#endif
 
 
 class Audio : public A_thread
@@ -57,6 +60,10 @@ public:
     // Render one host-provided audio block. The caller owns the output buffers.
     // This entry point contains no device-API calls and is suitable for WASAPI.
     void  render_block (float **outputs, int nframes);
+#ifdef _WIN32
+    // Render an arbitrary-size planar-float host packet using 64-frame engine quanta.
+    bool  render_host_packet (float **outputs, unsigned int nframes);
+#endif
 
     const char  *appname (void) const { return _appname; }
     uint16_t    *midimap (void) const { return (uint16_t *) _midimap; }
@@ -88,6 +95,9 @@ private:
     void proc_keys1 (void);
     void proc_keys2 (void);
     void proc_mesg (void);
+#ifdef _WIN32
+    static void render_host_quantum (void *context, float **outputs, int nframes);
+#endif
 
     void key_off (int n, int b)
     {
@@ -159,6 +169,9 @@ private:
     Lfq_u8         *_qmidi;
 #endif
     volatile bool   _running;
+#ifdef _WIN32
+    AudioQuantumFifo *_host_fifo;
+#endif
 #ifdef __linux__
     Alsa_pcmi      *_alsa_handle;
 #endif
