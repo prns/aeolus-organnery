@@ -2,11 +2,11 @@
 // The original X11 GUI and native Windows MIDI backend are not part of this
 // bootstrap executable yet.
 
+#include <clthreads.h>
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <clthreads.h>
 #include "../source/audio.h"
 #include "../source/imidi.h"
 #include "../source/model.h"
