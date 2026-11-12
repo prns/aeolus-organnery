@@ -245,3 +245,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - The WASAPI host now checks that extensible float formats advertise 32 valid bits, not merely a 32-bit container. It also validates the average byte rate against the negotiated sample rate and block alignment before treating the endpoint buffer as interleaved float samples.
 - Removed an unused second interleaved scratch allocation; the host writes directly into the buffer returned by `IAudioRenderClient::GetBuffer`, while the planar render buffers remain preallocated.
 - The adapter and host compile successfully in the preceding Windows CI run. The stricter validation/removal change is awaiting its own CI result. No physical Windows audio endpoint has been exercised yet.
+
+### 2026-11-12 — WASAPI adapter compile verification
+
+- Added the Aeolus-facing WASAPI output adapter, which opens the Windows render host, initializes the existing synthesis engine with the negotiated sample rate and channel topology, and forwards arbitrary host packets through the 64-frame quantum FIFO.
+- The FIFO is specifically responsible for packet sizes that are not multiples of 64; the earlier proposed requirement to reject such device packet sizes is superseded by this buffering layer. It renders complete 64-frame engine quanta and copies only the requested frames to the host packet.
+- Fixed a Windows header macro collision (NO_ERROR) by including the Aeolus audio declarations before the WASAPI/Windows headers in the adapter translation unit.
+- GitHub Actions run [43205399434](https://github.com/prns/aeolus-organnery/actions/runs/43205399434) passed, including compilation of the WASAPI host and Aeolus adapter, plus the existing core, MIDI lifecycle, FIFO, and float-interleave checks.
+- This is compile/test coverage for the host adapter, not a linked application or a physical audio-device test. The Windows application entry point, native GUI, and functional MIDI backend remain unimplemented.
