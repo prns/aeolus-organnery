@@ -207,3 +207,7 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - The adapter keeps any unused tail of a rendered quantum for the next device packet. This preserves sample continuity when WASAPI packet lengths are not multiples of 64; it does not pad callbacks or skip synthesis frames.
 - Added a deterministic test using packet sizes 13, 79, 1, 127, 64, and 3 frames. It checks left/right sample continuity across callback boundaries and verifies that only full 64-frame blocks are rendered.
 - Added the test to the Windows x64 GitHub Actions workflow. This validates the packet adaptation logic only; no WASAPI device client, COM initialization, endpoint enumeration, device format conversion, or real-time playback has been implemented yet.
+
+
+- Follow-up: removed the old `init_host()` restriction that required the host's nominal packet size to be a multiple of 64. With the FIFO adapter in place, host packet sizes such as 480 frames are valid; only the internal renderer remains quantized to 64 frames.
+- Expanded the FIFO test to include a 480-frame packet, representative of common audio-engine callback sizes. The test is part of the same Windows CI job.
