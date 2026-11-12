@@ -7,11 +7,11 @@ Target: a standalone 64-bit Windows application for Windows 10 and 11. This is n
 The current source tree is a Linux-first application, not a portable Windows project:
 
 - `source/Makefile` builds the engine and two dynamically loaded UI modules. It links JACK, zita-alsa-pcmi, clthreads, and (for the X11 UI) clxclient, Xft, and X11.
-- `source/audio.h` exposes a JACK-based audio path and conditionally includes the Linux ALSA PCM implementation.
-- `source/audio.cc` contains the synthesiser's audio processing as well as JACK/ALSA device setup and callbacks. The processing loop should be separated from host-specific device I/O before adding Windows backends.
-- `source/imidi.cc` currently implements the Linux ALSA sequencer path. The header has an Apple CoreMIDI conditional, but no Windows MIDI implementation.
+- `source/audio.h` exposes a JACK-based audio path and conditionally includes the Linux ALSA PCM implementation. `source/audio.cc` mixes synthesis processing with JACK/ALSA device setup and callbacks.
+- `source/imidi.cc` is implemented against the ALSA sequencer API. `imidi.h` has an Apple CoreMIDI declaration, but the implementation is not a complete CoreMIDI backend and there is no Windows MIDI backend.
 - `source/main.cc` uses POSIX facilities (including `unistd.h`, `sys/mman.h`, `dlfcn.h`, signals, and `getopt`) and loads a UI shared object at runtime.
 - The existing graphical interface is X11/clxclient-based. Those dependencies are not a drop-in Windows GUI solution.
+- The model, audio engine, MIDI service, and UI all use `clthreads` thread/event primitives. A Windows port therefore needs a supported Windows build of that dependency or a deliberate replacement/adapter; simply excluding JACK and ALSA is not sufficient.
 
 The Makefile identifies Aeolus as version 0.9.10. Source files carry GPL-3.0-or-later notices; preserve those notices in any derived source.
 
@@ -69,16 +69,22 @@ Keep the synthesis/model code independent of the operating system. Put platform 
 
 This file records the initial technical assessment and intended sequence only. No Windows backend, GUI port, executable, or passing Windows build has been produced yet. Each milestone should be implemented and tested in its own commits on the `windows-port` branch.
 
-
 ## Work log
 
-### 2026-11-12 — First source portability change
+### 2026-11-12 — Windows byte-order portability
 
-- Added a Windows-specific little-endian definition in `source/global.h`, so the existing byte-order serialization macros can be selected by Windows builds instead of failing because `<endian.h>` is unavailable.
-- This is a narrow prerequisite only. It does not establish that the full application builds on Windows.
-- Not yet compiled or tested with MSVC or MinGW. The next source-level work is to separate the platform-specific audio and MIDI device APIs from the synthesiser/model logic, then establish a build target against the selected Windows thread and GUI dependencies.
+- Updated `source/global.h` to use project-local `AEOLUS_*` byte-order macros.
+- Windows builds now select little-endian serialization without relying on the non-portable `<endian.h>` header.
+- Avoided defining implementation-reserved double-underscore byte-order macros, which can collide with toolchain/system headers.
+- This is a narrow source portability fix only. It has not yet been compiled with MSVC or MinGW and does not establish that the application builds on Windows.
 
+### Next engineering steps
+
+1. Inspect and choose the Windows-compatible thread/event dependency or implement a small compatibility layer for the `clthreads` API used throughout the engine.
+2. Separate the synthesis processing loop from the JACK/ALSA device setup in `Audio`, then add the WASAPI host.
+3. Replace the ALSA-only `Imidi` implementation with a platform MIDI service; preserve the existing queue/message protocol so the model remains unchanged.
+4. Only after the service boundaries are stable, introduce the Windows application entry point and GUI host.
 
 ### Source inventory clarification
 
-The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. These are **Aeolus GUI windows** for audio and MIDI settings, implemented using `clxclient` and X11; they are not Windows audio or Windows MIDI backends. Their names must not be mistaken for existing Windows support.
+The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. These are **Aeolus GUI windows** for audio and MIDI settings, implemented using `clxclient` and X11; they are not Windows audio or Windows MIDI backends.
