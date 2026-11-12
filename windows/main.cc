@@ -1,6 +1,5 @@
 // Windows console entry point for the first runnable Aeolus port.
-// The original X11 GUI and native Windows MIDI backend are not part of this
-// bootstrap executable yet.
+// This entry point uses the native Win32 organ console and WinMM MIDI input.
 
 #include <clthreads.h>
 #include <windows.h>
@@ -18,6 +17,11 @@
 bool x_opt = false;
 
 static AeolusWasapiOutput *g_output = 0;
+
+void aeolus_request_shutdown(void)
+{
+    if (g_output) g_output->stop();
+}
 
 static BOOL WINAPI console_control(DWORD type)
 {
