@@ -25,7 +25,7 @@ jobs:
       - name: Compile portable synthesis and organ-model units
         run: |
           mkdir -p build/windows-core
-          for unit in exp2ap rngen scales asection reverb rankwave addsynth division; do
+          for unit in exp2ap rngen scales asection reverb rankwave addsynth division lfqueue; do
             g++ -std=gnu++11 -O2 -Wall -Wextra -Isource \
               -c "source/$unit.cc" -o "build/windows-core/$unit.o"
           done
