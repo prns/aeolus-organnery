@@ -67,7 +67,25 @@ Keep the synthesis/model code independent of the operating system. Put platform 
 
 ## Current status
 
-This file records the initial technical assessment and intended sequence only. No Windows backend, GUI port, executable, or passing Windows build has been produced yet. Each milestone should be implemented and tested in its own commits on the `windows-port` branch.
+The Windows port is still incomplete; there is no standalone Windows executable and no native GUI or functional Windows MIDI backend yet.
+
+Implemented and verified so far:
+
+- A host-managed synthesis rendering path in the Aeolus audio engine.
+- A 64-frame quantum FIFO that adapts arbitrary host packet sizes without overrunning the synthesizer's fixed render quantum.
+- A WASAPI shared-mode event-driven render host and an Aeolus audio-output adapter.
+- A Windows x64 GitHub Actions compile/test job. The successful run [43205399434](https://github.com/prns/aeolus-organnery/actions/runs/43205399434) compiles the portable engine/model subset, threading layer, WASAPI host, and adapter, and runs the MIDI lifecycle, FIFO, and float-interleave smoke tests.
+
+Not yet implemented or verified:
+
+- A complete Windows application entry point and lifecycle.
+- A native Windows GUI preserving the original organ console.
+- Windows USB-MIDI input/output and device selection.
+- ASIO support.
+- Runtime testing against physical Windows audio and MIDI devices.
+- A complete linked and packaged `.exe`.
+
+The CI result is a successful core/host compilation probe, not a complete Windows application build. Continue implementing and testing each milestone in separate commits on the `windows-port` branch.
 
 ## Work log
 
