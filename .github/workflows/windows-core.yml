@@ -6,6 +6,7 @@ on:
     paths:
       - 'source/**'
       - 'windows/**'
+      - 'third_party/**'
       - '.github/workflows/windows-core.yml'
   workflow_dispatch:
 
@@ -30,6 +31,18 @@ jobs:
               -c "source/$unit.cc" -o "build/windows-core/$unit.o"
           done
           ar rcs build/windows-core/libaeolus-core.a build/windows-core/*.o
+      - name: Compile clthreads and the isolated MIDI translation unit
+        run: |
+          mkdir -p build/windows-clthreads
+          for unit in p_thread a_thread itc_mesg itc_ip1q itc_ctrl textmsg; do
+            g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread \
+              -Ithird_party/clthreads -c "third_party/clthreads/$unit.cc" \
+              -o "build/windows-clthreads/$unit.o"
+          done
+          ar rcs build/windows-clthreads/libclthreads.a build/windows-clthreads/*.o
+          g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread \
+            -Isource -Ithird_party/clthreads -c source/imidi.cc \
+            -o build/windows-clthreads/imidi.o
       - name: Upload Windows core archive
         uses: actions/upload-artifact@v4
         with:
