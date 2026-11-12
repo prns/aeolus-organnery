@@ -67,6 +67,34 @@ int main(int argc, char **argv)
         }
     }
 
+    // Resolve bundled stops/waves relative to the executable, not the
+    // shell's current working directory. This makes the extracted package
+    // runnable from a shortcut or another working directory.
+    wchar_t module_path[32768];
+    DWORD module_length = GetModuleFileNameW(NULL, module_path,
+                                             (DWORD)(sizeof(module_path) / sizeof(module_path[0])));
+    if (module_length == 0 ||
+        module_length >= sizeof(module_path) / sizeof(module_path[0]))
+    {
+        fprintf(stderr, "Aeolus: could not determine the executable directory.\\n");
+        return 1;
+    }
+    wchar_t *last_separator = wcsrchr(module_path, L'\\\\');
+    wchar_t *last_forward = wcsrchr(module_path, L'/');
+    if (last_forward && (!last_separator || last_forward > last_separator))
+        last_separator = last_forward;
+    if (!last_separator)
+    {
+        fprintf(stderr, "Aeolus: executable path has no directory.\\n");
+        return 1;
+    }
+    *last_separator = L'\\0';
+    if (!SetCurrentDirectoryW(module_path))
+    {
+        fprintf(stderr, "Aeolus: could not set the executable directory as working directory.\\n");
+        return 1;
+    }
+
     Lfq_u32 note_queue(256);
     Lfq_u32 comm_queue(256);
     Lfq_u8 midi_queue(1024);
