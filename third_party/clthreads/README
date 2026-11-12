@@ -1,7 +1,16 @@
+clthreads — vendored dependency
 
-This repository is a copy of the latest source for clthreads, a C++ threading
-library by Fons Adriaensen <fons@kokkinizita.net>. It's hosted here because the
-source was getting difficult to find elsewhere, and the library is needed for
-some really nice audio software.
+This directory contains the upstream clthreads source by Fons Adriaensen.
 
-This repository has been migrated to codeberg: https://codeberg.org/dmeliza/clthreads
+Upstream repository: https://github.com/dmeliza/clthreads
+Upstream revision imported: 7b59da40f3cae5a86eb23bc806c2d32e128680c5
+
+The upstream source is distributed under the GNU Lesser General Public
+License, version 2.1 or (at your option) any later version. The full license
+text is in COPYING. Copyright and license notices in the imported files are
+preserved. The imported implementation has not been modified.
+
+The Windows CI job compiles this dependency using the MSYS2 UCRT64 MinGW
+compiler and its POSIX-thread support. A successful compile is only a build
+check; scheduling behaviour, cancellation, shutdown ordering, and real-time
+audio performance still require runtime tests on Windows.
