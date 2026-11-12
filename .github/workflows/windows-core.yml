@@ -60,7 +60,7 @@ jobs:
             build/windows-clthreads/p_thread.o build/windows-clthreads/a_thread.o \
             build/windows-clthreads/itc_mesg.o build/windows-clthreads/itc_ip1q.o \
             build/windows-clthreads/itc_ctrl.o build/windows-clthreads/textmsg.o \
-            -o build/windows-clthreads/imidi-link-smoke.exe
+            -lwinmm -o build/windows-clthreads/imidi-link-smoke.exe
           ./build/windows-clthreads/imidi-link-smoke.exe
       - name: Test variable host packet sizes against 64-frame render quanta
         run: |
