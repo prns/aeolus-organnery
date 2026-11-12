@@ -413,9 +413,11 @@ void Imidi::proc_midi (void)
 
 #else
 
-// Windows lifecycle backend. MIDI device enumeration and WinMM input/output
-// are still pending; publish an empty MIDI endpoint so the model can complete
-// startup and the audio engine can run without a MIDI device.
+// Native Windows MIDI input using WinMM. Incoming short messages are copied
+// from the multimedia callback into a bounded SPSC queue; all Aeolus queue
+// and model processing happens on the Imidi worker thread.
+#include <mmsystem.h>
+
 Imidi::Imidi (Lfq_u32 *qnote, Lfq_u8 *qmidi, uint16_t *midimap, const char *appname) :
     A_thread ("Imidi"),
     _qnote (qnote),
@@ -424,31 +426,196 @@ Imidi::Imidi (Lfq_u32 *qnote, Lfq_u8 *qmidi, uint16_t *midimap, const char *appn
     _appname (appname),
     _client (0),
     _ipport (0),
-    _opport (0)
+    _opport (0),
+    _win_input (0),
+    _win_running (false),
+    _win_write (0),
+    _win_read (0)
 {
 }
 
 Imidi::~Imidi (void)
 {
+    terminate ();
+}
+
+void CALLBACK Imidi::midi_callback (HMIDIIN, UINT message, DWORD_PTR instance,
+                                    DWORD_PTR param1, DWORD_PTR)
+{
+    Imidi *self = (Imidi *) instance;
+    if (!self || message != MIM_DATA) return;
+
+    unsigned write = self->_win_write.load (std::memory_order_relaxed);
+    unsigned next = (write + 1) & 255;
+    if (next == self->_win_read.load (std::memory_order_acquire)) return;
+    self->_win_messages [write] = (DWORD) param1;
+    self->_win_write.store (next, std::memory_order_release);
 }
 
 void Imidi::terminate (void)
 {
-    put_event (EV_EXIT, 1);
+    _win_running.store (false, std::memory_order_release);
+}
+
+void Imidi::process_win_message (DWORD message)
+{
+    unsigned status = message & 0xFF;
+    unsigned d1 = (message >> 8) & 0x7F;
+    unsigned d2 = (message >> 16) & 0x7F;
+    unsigned type = status & 0xF0;
+    unsigned channel = status & 0x0F;
+    unsigned map = _midimap [channel];
+    unsigned keyboard = map & 127;
+    unsigned flags = (map >> 12) & 7;
+
+    if (type == 0x90 || type == 0x80)
+    {
+        bool on = (type == 0x90 && d2 != 0);
+        unsigned note = d1;
+        unsigned velocity = d2;
+        unsigned group = 0;
+        switch (keyboard & 0x0F)
+        {
+            case 0x01: group = 0; break;
+            case 0x02: group = 1; break;
+            case 0x04: group = 2; break;
+            case 0x08: group = 3; break;
+            case 0x0F: group = 4; break;
+        }
+        if (note < 36)
+        {
+            if ((flags & 4) && note < 24 && _qmidi->write_avail () >= 6)
+            {
+                _qmidi->write (0, 0xB0 | channel);
+                _qmidi->write (1, MIDICTL_IFELM);
+                _qmidi->write (2, (on ? 0x60 : 0x50) | group);
+                _qmidi->write_commit (3);
+                _qmidi->write (0, 0xB0 | channel);
+                _qmidi->write (1, MIDICTL_IFELM);
+                _qmidi->write (2, note);
+                _qmidi->write_commit (3);
+            }
+            else if (on && (flags & 4) && note >= 24 && note < 34 &&
+                     _qmidi->write_avail () >= 3)
+            {
+                _qmidi->write (0, 0x90);
+                _qmidi->write (1, note);
+                _qmidi->write (2, velocity);
+                _qmidi->write_commit (3);
+            }
+        }
+        else if (note <= 96 && keyboard && _qnote->write_avail () > 0)
+        {
+            _qnote->write (0, (on ? (1u << 24) : 0) |
+                           ((note - 36) << 8) | keyboard);
+            _qnote->write_commit (1);
+        }
+    }
+    else if (type == 0xB0)
+    {
+        unsigned p = d1, value = d2;
+        if (p == MIDICTL_HOLD && (keyboard & HOLD_MASK) &&
+            _qnote->write_avail () > 0)
+        {
+            unsigned hold = value > 63 ? 9 : 8;
+            _qnote->write (0, (hold << 24) | (keyboard << 16));
+            _qnote->write_commit (1);
+        }
+        else if (p == MIDICTL_ASOFF && (flags & 4) &&
+                 _qnote->write_avail () > 0)
+        {
+            _qnote->write (0, (2u << 24) | (ALL_MASK << 16) | ALL_MASK);
+            _qnote->write_commit (1);
+        }
+        else if (p == MIDICTL_ANOFF && keyboard &&
+                 _qnote->write_avail () > 0)
+        {
+            _qnote->write (0, (2u << 24) | (keyboard << 16) | keyboard);
+            _qnote->write_commit (1);
+        }
+        else if ((flags & 4) && _qmidi->write_avail () >= 3)
+        {
+            _qmidi->write (0, 0xB0 | channel);
+            _qmidi->write (1, p);
+            _qmidi->write (2, value);
+            _qmidi->write_commit (3);
+        }
+        else if ((flags & 2) && keyboard && _qmidi->write_avail () >= 3)
+        {
+            unsigned division_channel = (keyboard & 1) ? 0 :
+                                        (keyboard & 2) ? 1 :
+                                        (keyboard & 4) ? 2 : 3;
+            _qmidi->write (0, 0xB0 | division_channel);
+            _qmidi->write (1, p);
+            _qmidi->write (2, value);
+            _qmidi->write_commit (3);
+        }
+    }
+    else if (type == 0xC0 && (flags & 4) && _qmidi->write_avail () >= 3)
+    {
+        _qmidi->write (0, 0xC0);
+        _qmidi->write (1, d1);
+        _qmidi->write (2, 0);
+        _qmidi->write_commit (3);
+    }
 }
 
 void Imidi::thr_main (void)
 {
-    M_midi_info *M = new M_midi_info ();
-    M->_client = 0;
-    M->_ipport = 0;
-    M->_opport = 0;
-    M->_backend = 0;
-    memcpy (M->_chbits, _midimap, 16 * sizeof (uint16_t));
-    send_event (TO_MODEL, M);
+    M_midi_info *info = new M_midi_info ();
+    info->_client = 0;
+    info->_ipport = 0;
+    info->_opport = 0;
+    info->_backend = 0;
+    memcpy (info->_chbits, _midimap, 16 * sizeof (uint16_t));
+    send_event (TO_MODEL, info);
 
-    while (get_event () != EV_EXIT)
-        ;
+    UINT count = midiInGetNumDevs ();
+    if (count == 0)
+        fprintf (stderr, "Aeolus: no Windows MIDI input devices found.\\n");
+    else
+    {
+        for (UINT i = 0; i < count; ++i)
+        {
+            MIDIINCAPSW caps;
+            if (midiInGetDevCapsW (i, &caps, sizeof (caps)) == MMSYSERR_NOERROR)
+                fwprintf (stderr, L"Aeolus MIDI input %u: %ls\\n", i, caps.szPname);
+        }
+        MMRESULT result = midiInOpen (&_win_input, 0,
+            (DWORD_PTR) &Imidi::midi_callback, (DWORD_PTR) this, CALLBACK_FUNCTION);
+        if (result == MMSYSERR_NOERROR)
+        {
+            _win_running.store (true, std::memory_order_release);
+            midiInStart (_win_input);
+        }
+        else
+        {
+            fprintf (stderr, "Aeolus: could not open default Windows MIDI input (error %u).\\n",
+                     (unsigned) result);
+            _win_input = 0;
+        }
+    }
+
+    while (_win_running.load (std::memory_order_acquire))
+    {
+        unsigned read = _win_read.load (std::memory_order_relaxed);
+        unsigned write = _win_write.load (std::memory_order_acquire);
+        if (read != write)
+        {
+            DWORD msg = _win_messages [read];
+            _win_read.store ((read + 1) & 255, std::memory_order_release);
+            process_win_message (msg);
+        }
+        else Sleep (2);
+    }
+
+    if (_win_input)
+    {
+        midiInStop (_win_input);
+        midiInReset (_win_input);
+        midiInClose (_win_input);
+        _win_input = 0;
+    }
     send_event (EV_EXIT, 1);
 }
 
