@@ -114,6 +114,7 @@ jobs:
           tar -xOf data.tar.xz ./usr/share/doc/stops/copyright > ../windows-package/stops-COPYRIGHT
           cd ../..
           test -f build/windows-package/stops/Aeolus/definition
+          mkdir -p build/windows-package/stops/waves
           rm build/windows-package/stops.deb
       - name: Upload Windows standalone folder
         uses: actions/upload-artifact@v4
