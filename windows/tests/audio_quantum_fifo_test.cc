@@ -29,16 +29,16 @@ int main(void)
 {
     AudioQuantumFifo fifo(2);
     TestRenderer state = { 0, 0 };
-    const unsigned int packets[] = { 13, 79, 1, 127, 64, 3 };
+    const unsigned int packets[] = { 13, 79, 1, 127, 480, 64, 3 };
     unsigned int expected = 0;
 
     for (unsigned int p = 0; p < sizeof(packets) / sizeof(packets[0]); ++p)
     {
-        float left[127];
-        float right[127];
+        float left[480];
+        float right[480];
         float *outputs[2] = { left, right };
 
-        if (packets[p] > 127 ||
+        if (packets[p] > 480 ||
             !fifo.pull(outputs, packets[p], render_test, &state))
             return 1;
 
