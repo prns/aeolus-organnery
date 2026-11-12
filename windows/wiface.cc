@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+extern void aeolus_request_shutdown(void);
+
 Wiface::Wiface(int, char **) :
     _window(0), _stop(false), _ready(false), _initdata(0),
     _width(1100), _height(760)
