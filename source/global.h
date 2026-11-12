@@ -25,12 +25,18 @@ extern bool x_opt;
 #define debug_nlf(M, ...) if (x_opt) { printf("%s[%d] %s: " M, __FILE__, __LINE__, __func__,  ##__VA_ARGS__); }
 #define debug(M, ...) if (x_opt) { printf("%s[%d] %s: " M "\n", __FILE__, __LINE__, __func__,  ##__VA_ARGS__); }
 
-#ifdef __APPLE__
+#if defined(_WIN32)
+// Windows targets supported by this port are little-endian.
+#define __LITTLE_ENDIAN 1234
+#define __BIG_ENDIAN    4321
+#define __PDP_ENDIAN    3412
+#define __BYTE_ORDER    __LITTLE_ENDIAN
+#elif defined(__APPLE__)
 #include <machine/endian.h>
-#define __LITTLE_ENDIAN	__DARWIN_LITTLE_ENDIAN
-#define __BIG_ENDIAN	__DARWIN_BIG_ENDIAN
-#define __PDP_ENDIAN	__DARWIN_PDP_ENDIAN
-#define	__BYTE_ORDER	__DARWIN_BYTE_ORDER
+#define __LITTLE_ENDIAN __DARWIN_LITTLE_ENDIAN
+#define __BIG_ENDIAN    __DARWIN_BIG_ENDIAN
+#define __PDP_ENDIAN    __DARWIN_PDP_ENDIAN
+#define __BYTE_ORDER    __DARWIN_BYTE_ORDER
 #else
 #include <endian.h>
 #endif
