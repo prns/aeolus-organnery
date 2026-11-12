@@ -431,10 +431,6 @@ Imidi::~Imidi (void)
 {
 }
 
- // Windows MIDI is provided by a native backend in a subsequent porting
-// step. Keep this translation unit buildable without ALSA in the meantime.
-// This stub deliberately does not claim to enumerate or receive MIDI input.
-
 void Imidi::terminate (void)
 {
     put_event (EV_EXIT, 1);
