@@ -77,3 +77,8 @@ This file records the initial technical assessment and intended sequence only. N
 - Added a Windows-specific little-endian definition in `source/global.h`, so the existing byte-order serialization macros can be selected by Windows builds instead of failing because `<endian.h>` is unavailable.
 - This is a narrow prerequisite only. It does not establish that the full application builds on Windows.
 - Not yet compiled or tested with MSVC or MinGW. The next source-level work is to separate the platform-specific audio and MIDI device APIs from the synthesiser/model logic, then establish a build target against the selected Windows thread and GUI dependencies.
+
+
+### Source inventory clarification
+
+The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. These are **Aeolus GUI windows** for audio and MIDI settings, implemented using `clxclient` and X11; they are not Windows audio or Windows MIDI backends. Their names must not be mistaken for existing Windows support.
