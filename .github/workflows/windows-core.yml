@@ -101,6 +101,25 @@ jobs:
         with:
           name: aeolus-windows-x64-bootstrap
           path: build/windows-app/aeolus.exe
+      - name: Assemble standalone folder with default instrument data
+        run: |
+          mkdir -p build/windows-package
+          cp build/windows-app/aeolus.exe build/windows-package/aeolus.exe
+          curl -fL https://deb.debian.org/debian/pool/main/s/stops/stops_0.4.0-1_all.deb -o build/windows-package/stops.deb
+          echo "76d6864a09433d22adbcf9f370597c965ad300f788f98e1f148f267e5f6ec03b  build/windows-package/stops.deb" | sha256sum -c -
+          mkdir -p build/stops-extract
+          cd build/stops-extract
+          ar x ../windows-package/stops.deb data.tar.xz
+          tar -xf data.tar.xz -C ../windows-package --strip-components=4 ./usr/share/aeolus/stops
+          tar -xOf data.tar.xz ./usr/share/doc/stops/copyright > ../windows-package/stops-COPYRIGHT
+          cd ../..
+          test -f build/windows-package/stops/Aeolus/definition
+          rm build/windows-package/stops.deb
+      - name: Upload Windows standalone folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: aeolus-windows-x64-package
+          path: build/windows-package/**
       - name: Upload Windows core archive
         uses: actions/upload-artifact@v4
         with:
