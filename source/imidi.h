@@ -26,6 +26,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <mmsystem.h>
+#ifdef NO_ERROR
+#undef NO_ERROR
+#endif
 #include <atomic>
 #endif
 #include <stdio.h>
