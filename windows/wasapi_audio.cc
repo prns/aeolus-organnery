@@ -47,7 +47,13 @@ bool WasapiAudioHost::open(RenderCallback callback, void *context)
     {
         const WAVEFORMATEXTENSIBLE *ext =
             reinterpret_cast<const WAVEFORMATEXTENSIBLE *>(_mix_format);
-        is_float = IsEqualGUID(ext->SubFormat, KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) != 0 &&
+        // Compare the standard IEEE-float subtype value locally.  Some
+        // MinGW SDK combinations declare this GUID but do not provide its
+        // external definition at link time.
+        const GUID ieee_float_subtype =
+            { 0x00000003, 0x0000, 0x0010,
+              { 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71 } };
+        is_float = IsEqualGUID(ext->SubFormat, ieee_float_subtype) != 0 &&
                    ext->Samples.wValidBitsPerSample == 32;
     }
 
