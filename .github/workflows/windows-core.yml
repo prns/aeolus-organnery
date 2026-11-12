@@ -88,9 +88,9 @@ jobs:
           for unit in imidi model slave audio tiface; do
             g++ -std=gnu++11 -O2 -Wall -Wextra -D_WIN32 -D_REENTRANT -pthread -DVERSION='"0.9.10"' -Isource -Ithird_party/clthreads -c "source/$unit.cc" -o "build/windows-app/$unit.o"
           done
-          g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread -Isource -Ithird_party/clthreads -Iwindows -c windows/main.cc -o build/windows-app/main.o
-          g++ -std=gnu++11 -O2 -Wall -Wextra -Iwindows -c windows/wasapi_audio.cc -o build/windows-app/wasapi_audio.o
-          g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread -Isource -Ithird_party/clthreads -Iwindows -c windows/wasapi_audio_output.cc -o build/windows-app/wasapi_audio_output.o
+          g++ -std=gnu++11 -O2 -Wall -Wextra -D_WIN32 -D_REENTRANT -pthread -Isource -Ithird_party/clthreads -Iwindows -c windows/main.cc -o build/windows-app/main.o
+          g++ -std=gnu++11 -O2 -Wall -Wextra -D_WIN32 -DINITGUID -Iwindows -c windows/wasapi_audio.cc -o build/windows-app/wasapi_audio.o
+          g++ -std=gnu++11 -O2 -Wall -Wextra -D_WIN32 -D_REENTRANT -pthread -Isource -Ithird_party/clthreads -Iwindows -c windows/wasapi_audio_output.cc -o build/windows-app/wasapi_audio_output.o
           g++ -o build/windows-app/aeolus.exe build/windows-app/*.o -pthread -lreadline -lole32 -luuid
       - name: Upload Windows executable
         uses: actions/upload-artifact@v4
