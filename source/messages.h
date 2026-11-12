@@ -22,7 +22,9 @@
 #define __MESSAGES_H
 
 #include <string.h>
+#ifdef __linux__
 #include <alsa/asoundlib.h>
+#endif
 #include "rankwave.h"
 #include "asection.h"
 #include "addsynth.h"
@@ -118,7 +120,11 @@ public:
     int       _client;
     int       _ipport;
     int       _opport;
+#ifdef __linux__
     snd_seq_t *_seq;
+#else
+    void      *_backend;
+#endif
     uint16_t  _chbits [16];
 };
 
@@ -170,7 +176,11 @@ public:
     int                 _client;
     int                 _ipport;
     int                 _opport;
+#ifdef __linux__
     snd_seq_t          *_seq;
+#else
+    void                *_midi_backend;
+#endif
     int                 _nasect;
     int                 _nkeybd;
     int                 _ndivis;
