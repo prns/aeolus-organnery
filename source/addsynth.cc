@@ -131,7 +131,7 @@ void N_func::read (FILE *F)
     fread (&_b, 1, sizeof (int32_t), F);
     fread (&_v, N_NOTE, sizeof (float), F);
 
-#elif (__BYTE_ORDER == __BIG_ENDIAN)
+#elif (AEOLUS_BYTE_ORDER == AEOLUS_BIG_ENDIAN)
 
     int  i;
     char d [sizeof (int) + N_NOTE * sizeof (float)];
@@ -143,9 +143,6 @@ void N_func::read (FILE *F)
 
 #else
 #error Byte order is not supported !
-#endif
-#else
-#error Byte order is undefined !
 #endif
 }
 
