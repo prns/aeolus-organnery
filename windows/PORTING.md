@@ -111,3 +111,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Added `Audio::render_block(float **outputs, int nframes)` as a device-API-independent entry point for one audio block. It consumes the existing note/command queues, updates keyboard state, renders the synth into caller-owned output buffers, and processes engine messages.
 - Routed both the JACK callback and the ALSA playback loop through this shared method. JACK MIDI remains handled by the existing JACK event path inside the synthesis loop; a future WASAPI host can call the same renderer with its own output buffers and no JACK client.
 - This is the first real audio-host seam, not a WASAPI implementation. `audio.h` still includes JACK headers, the JACK MIDI parser is still JACK-specific, and device lifecycle/sample-rate negotiation remain to be separated. No Windows build/test has been run.
+
+
+### 2026-11-12 — Isolate JACK-specific audio host code
+
+- Wrapped the JACK client declarations, fields, MIDI parser, callback/lifecycle methods, and JACK headers in `#ifndef _WIN32` guards.
+- Kept the shared synthesis renderer and the Linux JACK/ALSA implementations available. On Windows, `audio.h` no longer requires JACK types and `audio.cc` no longer compiles the JACK host implementation or JACK MIDI event parser.
+- This removes one direct audio-host dependency from the Windows compilation path, but does not yet provide a Windows device initializer, sample-rate/buffer negotiation, output-channel setup, or a complete Windows build. The current `Audio` class still needs a Windows host entry point that initializes the synthesis engine before calling `render_block()`.
+- Linux behaviour has not been runtime-tested in this environment; no Windows compiler/build was run.
