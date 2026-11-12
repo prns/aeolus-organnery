@@ -1,0 +1,37 @@
+name: Windows x64 core compile
+
+on:
+  push:
+    branches: [windows-port]
+    paths:
+      - 'source/**'
+      - 'windows/**'
+      - '.github/workflows/windows-core.yml'
+  workflow_dispatch:
+
+jobs:
+  core-compile:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-gcc
+      - name: Compile portable synthesis units
+        run: |
+          mkdir -p build/windows-core
+          for unit in exp2ap rngen scales asection reverb rankwave; do
+            g++ -std=gnu++11 -O2 -Wall -Wextra -Isource \
+              -c "source/$unit.cc" -o "build/windows-core/$unit.o"
+          done
+          ar rcs build/windows-core/libaeolus-core.a build/windows-core/*.o
+      - name: Upload core archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: aeolus-windows-x64-core
+          path: build/windows-core/libaeolus-core.a
