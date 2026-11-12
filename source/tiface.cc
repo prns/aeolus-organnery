@@ -21,8 +21,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
+#ifndef _WIN32
 #include <readline/readline.h>
 #include <readline/history.h>
+#endif
 #include "tiface.h"
 
 
@@ -56,13 +59,31 @@ void Reader::thr_main (void)
 {
     M_ifc_txtip  *M;
 
+#ifndef _WIN32
     using_history ();
+#endif
     while (1)
     {
         get_event (1);
         M = (M_ifc_txtip *) get_message ();
+#ifdef _WIN32
+        // Keep the Windows bootstrap independent of GNU Readline/Terminfo.
+        char line [1024];
+        printf ("Aeolus> ");
+        fflush (stdout);
+        if (fgets (line, sizeof (line), stdin))
+        {
+            size_t n = strlen (line);
+            while (n && (line [n - 1] == '\n' || line [n - 1] == '\r'))
+                line [--n] = 0;
+            M->_line = (char *) malloc (n + 1);
+            if (M->_line) memcpy (M->_line, line, n + 1);
+        }
+        else M->_line = 0;
+#else
         M->_line = readline ("Aeolus> ");
         if (M->_line) add_history (M->_line);
+#endif
         reply  (M);
     }
 }
