@@ -162,13 +162,9 @@ void Audio::thr_main (void)
     while (_running)
     {
         k = _alsa_handle->pcm_wait ();
-        proc_queue (_qnote);
-        proc_queue (_qcomm);
-        proc_keys1 ();
-        proc_keys2 ();
         while (k >= _fsize)
         {
-            proc_synth (_fsize);
+            render_block (_outbuf, _fsize);
             _alsa_handle->play_init (_fsize);
             for (int i = 0; i < _nplay; i++) _alsa_handle->play_chan (i, _outbuf [i], _fsize);
             _alsa_handle->play_done (_fsize);
@@ -285,17 +281,26 @@ int Audio::jack_callback (jack_nframes_t nframes)
 {
     int i;
 
+    float *outputs [8];
+
+    for (i = 0; i < _nplay; i++) outputs [i] = (float *)(jack_port_get_buffer (_jack_opport [i], nframes));
+    _jmidi_pdata = _qmidi ? jack_port_get_buffer (_jack_midipt, nframes) : 0;
+    _jmidi_count = _jmidi_pdata ? jack_midi_get_event_count (_jmidi_pdata) : 0;
+    _jmidi_index = 0;
+    render_block (outputs, nframes);
+    return 0;
+}
+
+
+void Audio::render_block (float **outputs, int nframes)
+{
     proc_queue (_qnote);
     proc_queue (_qcomm);
     proc_keys1 ();
     proc_keys2 ();
-    for (i = 0; i < _nplay; i++) _outbuf [i] = (float *)(jack_port_get_buffer (_jack_opport [i], nframes));
-    _jmidi_pdata = jack_port_get_buffer (_jack_midipt, nframes);
-    _jmidi_count = jack_midi_get_event_count (_jmidi_pdata);
-    _jmidi_index = 0;
+    for (int i = 0; i < _nplay; i++) _outbuf [i] = outputs [i];
     proc_synth (nframes);
     proc_mesg ();
-    return 0;
 }
 
 
