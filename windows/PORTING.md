@@ -183,3 +183,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 
 - The MSYS2 UCRT64 Windows CI successfully compiled the vendored clthreads library sources and the non-Linux `source/imidi.cc` translation unit using the POSIX thread toolchain. This validates the dependency's basic compile path and the ALSA isolation guard; it does not validate runtime thread semantics or provide working Windows MIDI.
 - Expanded the next CI pass to also compile `source/model.cc`, `source/slave.cc`, and `source/audio.cc` against the vendored thread library. This checks whether the shared model and audio host seams are now syntactically buildable on Windows before adding a native device backend.
+
+
+### 2026-11-12 — Model/audio compile success and text-interface probe
+
+- Windows CI run `43196199081` succeeded after adding the missing `VERSION=0.9.10` definition. The UCRT64 compiler now accepts `model.cc`, `slave.cc`, and `audio.cc` in addition to the previously tested synthesis units, vendored clthreads sources, and the isolated MIDI translation unit.
+- This is still compile-only validation. It does not link or run Aeolus and does not mean the Windows audio or MIDI backends are operational.
+- Extended the workflow to compile the existing readline-based `tiface.cc` text interface and added the matching UCRT64 readline package. The resulting run is pending; the X11/clxclient graphical interface remains unported and is not replaced by this text-interface check.
+- The next substantial implementation task remains a real Windows audio host. The current `Audio::render_block()` renderer operates in 64-frame quanta; a WASAPI adapter must preserve that timeline when endpoint packets have different sizes, rather than padding or dropping samples. WASAPI's event-driven render path uses the Core Audio client/render-client interfaces and must be validated on a real Windows audio device.
