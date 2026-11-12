@@ -211,3 +211,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 
 - Follow-up: removed the old `init_host()` restriction that required the host's nominal packet size to be a multiple of 64. With the FIFO adapter in place, host packet sizes such as 480 frames are valid; only the internal renderer remains quantized to 64 frames.
 - Expanded the FIFO test to include a 480-frame packet, representative of common audio-engine callback sizes. The test is part of the same Windows CI job.
+
+
+### Host-render entry point wired into Audio (2026-11-12)
+
+- On Windows, `Audio` now owns an `AudioQuantumFifo` configured by `init_host()`.
+- New `render_host_packet(float **outputs, unsigned int nframes)` passes arbitrary-size planar-float packets through the FIFO and invokes the existing `render_block()` for complete 64-frame quanta.
+- FIFO allocation and configuration happen during host initialization, not on the render callback. The render path itself performs no allocation or locking.
+- This is the first connection from the host packet adapter into the actual Aeolus audio engine. WASAPI endpoint startup, COM/device lifetime, shared/exclusive format negotiation, interleaved-to-planar conversion, device-loss handling, and playback are still outstanding.
