@@ -177,3 +177,9 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Imported the upstream `dmeliza/clthreads` source and its LGPL-2.1-or-later license into `third_party/clthreads/`, preserving copyright notices and documenting the exact upstream revision.
 - Extended Windows CI to compile the six library translation units and the non-Linux `source/imidi.cc` translation unit using MSYS2 UCRT64 with POSIX thread flags. This is intended to test whether the chosen MinGW runtime can support the existing worker API without rewriting Aeolus's thread model.
 - The imported dependency has not been modified. A successful compile would still not prove thread scheduling, cancellation, queue safety, or shutdown behaviour at runtime. The current Windows MIDI implementation remains a no-op stub.
+
+
+### 2026-11-12 — First successful Windows compile of clthreads and MIDI boundary
+
+- The MSYS2 UCRT64 Windows CI successfully compiled the vendored clthreads library sources and the non-Linux `source/imidi.cc` translation unit using the POSIX thread toolchain. This validates the dependency's basic compile path and the ALSA isolation guard; it does not validate runtime thread semantics or provide working Windows MIDI.
+- Expanded the next CI pass to also compile `source/model.cc`, `source/slave.cc`, and `source/audio.cc` against the vendored thread library. This checks whether the shared model and audio host seams are now syntactically buildable on Windows before adding a native device backend.
