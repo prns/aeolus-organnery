@@ -570,6 +570,7 @@ void Imidi::thr_main (void)
     memcpy (info->_chbits, _midimap, 16 * sizeof (uint16_t));
     send_event (TO_MODEL, info);
 
+    _win_running.store (true, std::memory_order_release);
     UINT count = midiInGetNumDevs ();
     if (count == 0)
         fprintf (stderr, "Aeolus: no Windows MIDI input devices found.\\n");
@@ -585,8 +586,11 @@ void Imidi::thr_main (void)
             (DWORD_PTR) &Imidi::midi_callback, (DWORD_PTR) this, CALLBACK_FUNCTION);
         if (result == MMSYSERR_NOERROR)
         {
-            _win_running.store (true, std::memory_order_release);
-            midiInStart (_win_input);
+            if (midiInStart (_win_input) != MMSYSERR_NOERROR)
+            {
+                midiInClose (_win_input);
+                _win_input = 0;
+            }
         }
         else
         {
