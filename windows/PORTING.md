@@ -191,3 +191,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - This is still compile-only validation. It does not link or run Aeolus and does not mean the Windows audio or MIDI backends are operational.
 - Extended the workflow to compile the existing readline-based `tiface.cc` text interface and added the matching UCRT64 readline package. The resulting run is pending; the X11/clxclient graphical interface remains unported and is not replaced by this text-interface check.
 - The next substantial implementation task remains a real Windows audio host. The current `Audio::render_block()` renderer operates in 64-frame quanta; a WASAPI adapter must preserve that timeline when endpoint packets have different sizes, rather than padding or dropping samples. WASAPI's event-driven render path uses the Core Audio client/render-client interfaces and must be validated on a real Windows audio device.
+
+
+### 2026-11-12 — Successful Windows compile coverage and link-test expansion
+
+- GitHub Actions run `43198358610` passed on the UCRT64 Windows x64 runner for commit `b09c2ec`. The compile probe accepted the portable synthesis units, vendored `clthreads` sources, `imidi.cc`, `model.cc`, `slave.cc`, `audio.cc`, and `tiface.cc`.
+- The follow-up run `43198798624` adds a small Windows executable smoke test that constructs and destroys the non-Linux `Imidi` object while linking the actual queue and clthreads objects. This is intended to catch missing constructor, destructor, vtable, and dependency symbols that a compile-only test cannot detect. The smoke test does not start a thread and does not test MIDI I/O.
+- A successful smoke-test executable is only a link/lifecycle check for this narrow class boundary. It is not `Aeolus.exe`, and it does not validate the full application startup, audio rendering, MIDI devices, or GUI.
+- The next major audio step remains a native WASAPI host. Before integrating it, retain the 64-frame processing constraint and add explicit buffering between arbitrary endpoint packet sizes and the engine's render quantum if endpoint negotiation cannot guarantee compatible packets.
