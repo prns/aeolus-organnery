@@ -124,6 +124,10 @@ jobs:
           test -f build/windows-package/stops/Aeolus/definition
           ./build/windows-package/aeolus.exe --help | tee build/windows-package/SMOKE-TEST.txt
           grep -q "WASAPI shared-mode audio" build/windows-package/SMOKE-TEST.txt
+          mkdir -p "$RUNNER_TEMP/aeolus-unrelated-working-directory"
+          cd "$RUNNER_TEMP/aeolus-unrelated-working-directory"
+          "$GITHUB_WORKSPACE/build/windows-package/aeolus.exe" --check-data | tee "$GITHUB_WORKSPACE/build/windows-package/DATA-CHECK.txt"
+          grep -q "Aeolus package data found beside executable" "$GITHUB_WORKSPACE/build/windows-package/DATA-CHECK.txt"
       - name: Upload Windows standalone folder
         uses: actions/upload-artifact@v4
         with:
