@@ -219,3 +219,13 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - New `render_host_packet(float **outputs, unsigned int nframes)` passes arbitrary-size planar-float packets through the FIFO and invokes the existing `render_block()` for complete 64-frame quanta.
 - FIFO allocation and configuration happen during host initialization, not on the render callback. The render path itself performs no allocation or locking.
 - This is the first connection from the host packet adapter into the actual Aeolus audio engine. WASAPI endpoint startup, COM/device lifetime, shared/exclusive format negotiation, interleaved-to-planar conversion, device-loss handling, and playback are still outstanding.
+
+
+### 2026-11-12 — First native WASAPI render host
+
+- Added `windows/wasapi_audio.h/.cc` with a native Windows Core Audio shared-mode render client.
+- The host enumerates the default console render endpoint, negotiates the endpoint mix format, uses event-driven `IAudioClient` rendering, and obtains output packets through `IAudioRenderClient`.
+- The callback receives preallocated planar float buffers; the host interleaves them into the endpoint buffer without allocating in the render loop. It accepts 32-bit IEEE-float mix formats with either two or four channels and reports the negotiated sample rate and buffer size to its caller.
+- `stop()` signals the event so a blocking render loop can exit; COM/device setup and teardown are expected on the same thread that calls `open()` and `run()`.
+- The new source is added to the Windows CI compile pass. This is a backend component, not yet connected to the application startup or an `.exe`.
+- Current limitations are explicit: shared mode only; default endpoint only; float32 mix format only; stereo or four-channel output only; no endpoint hot-plug/recovery, device selector, exclusive mode, ASIO, or real-device playback validation. Unsupported mix formats fail cleanly rather than being misinterpreted.
