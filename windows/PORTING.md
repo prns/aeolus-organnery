@@ -68,3 +68,12 @@ Keep the synthesis/model code independent of the operating system. Put platform 
 ## Current status
 
 This file records the initial technical assessment and intended sequence only. No Windows backend, GUI port, executable, or passing Windows build has been produced yet. Each milestone should be implemented and tested in its own commits on the `windows-port` branch.
+
+
+## Work log
+
+### 2026-11-12 — First source portability change
+
+- Added a Windows-specific little-endian definition in `source/global.h`, so the existing byte-order serialization macros can be selected by Windows builds instead of failing because `<endian.h>` is unavailable.
+- This is a narrow prerequisite only. It does not establish that the full application builds on Windows.
+- Not yet compiled or tested with MSVC or MinGW. The next source-level work is to separate the platform-specific audio and MIDI device APIs from the synthesiser/model logic, then establish a build target against the selected Windows thread and GUI dependencies.
