@@ -46,6 +46,9 @@ public:
 #endif
     void  init_jack (const char *server, bool bform, Lfq_u8 *qmidi);
     void  start (void);
+    // Render one host-provided audio block. The caller owns the output buffers.
+    // This entry point contains no device-API calls and is suitable for WASAPI.
+    void  render_block (float **outputs, int nframes);
 
     const char  *appname (void) const { return _appname; }
     uint16_t    *midimap (void) const { return (uint16_t *) _midimap; }
