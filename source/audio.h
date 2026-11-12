@@ -76,7 +76,9 @@ private:
     void jack_shutdown (void);
     int  jack_callback (jack_nframes_t);
 #endif
+#ifndef _WIN32
     void proc_jmidi (int);
+#endif
     void proc_queue (Lfq_u32 *);
     void proc_synth (int);
     void proc_keys1 (void);
