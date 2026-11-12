@@ -19,7 +19,9 @@
 
 
 #include <math.h>
+#ifndef _WIN32
 #include <jack/midiport.h>
+#endif
 #include "audio.h"
 #include "messages.h"
 
@@ -30,12 +32,16 @@ Audio::Audio (const char *name, Lfq_u32 *qnote, Lfq_u32 *qcomm) :
     _appname (name),
     _qnote (qnote),
     _qcomm (qcomm),
+#ifndef _WIN32
     _qmidi (0),
+#endif
     _running (false),
 #ifdef __linux__
     _alsa_handle (0),
 #endif
+#ifndef _WIN32
     _jack_handle (0),
+#endif
     _abspri (0),
     _relpri (0),
     _bform (0),
@@ -55,7 +61,9 @@ Audio::~Audio (void)
 #ifdef __linux__
     if (_alsa_handle) close_alsa ();
 #endif
+#ifndef _WIN32
     if (_jack_handle) close_jack ();
+#endif
     for (i = 0; i < _nasect; i++) delete _asectp [i];
     for (i = 0; i < _ndivis; i++) delete _divisp [i];
     _reverb.fini ();
@@ -66,7 +74,9 @@ void Audio::init_audio (void)
 {
     int i;
 
+#ifndef _WIN32
     _jmidi_pdata = 0;
+#endif
     _audiopar [VOLUME]._val = 0.32f;
     _audiopar [VOLUME]._min = 0.00f;
     _audiopar [VOLUME]._max = 1.00f;
@@ -179,6 +189,7 @@ void Audio::thr_main (void)
 }
 
 
+#ifndef _WIN32
 void Audio::init_jack (const char *server, bool bform, Lfq_u8 *qmidi)
 {
     int                 i;
@@ -451,6 +462,9 @@ void Audio::proc_jmidi (int tmax)
 }
 
 
+#endif // !_WIN32
+
+
 void Audio::proc_queue (Lfq_u32 *Q)
 {
     uint32_t  k;
@@ -641,11 +655,13 @@ void Audio::proc_synth (int nframes)
     for (j = 0; j < _nplay; j++) out [j] = _outbuf [j];
     for (k = 0; k < nframes; k += PERIOD)
     {
+#ifndef _WIN32
         if (_jmidi_pdata)
         {
             proc_jmidi (k + PERIOD);
             proc_keys1 ();
         }
+#endif
 
         memset (W, 0, PERIOD * sizeof (float));
         memset (X, 0, PERIOD * sizeof (float));
