@@ -52,6 +52,16 @@ jobs:
       - name: Compile portable text interface
         run: |
           g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread -Isource -Ithird_party/clthreads -c source/tiface.cc -o build/windows-clthreads/tiface.o
+      - name: Link and run the Windows MIDI lifecycle smoke test
+        run: |
+          g++ -std=gnu++11 -O2 -Wall -Wextra -D_REENTRANT -pthread \
+            -Isource -Ithird_party/clthreads windows/tests/imidi_link_smoke.cc \
+            build/windows-clthreads/imidi.o build/windows-core/lfqueue.o \
+            build/windows-clthreads/p_thread.o build/windows-clthreads/a_thread.o \
+            build/windows-clthreads/itc_mesg.o build/windows-clthreads/itc_ip1q.o \
+            build/windows-clthreads/itc_ctrl.o build/windows-clthreads/textmsg.o \
+            -o build/windows-clthreads/imidi-link-smoke.exe
+          ./build/windows-clthreads/imidi-link-smoke.exe
       - name: Upload Windows core archive
         uses: actions/upload-artifact@v4
         with:
