@@ -156,7 +156,7 @@ void Wiface::thr_main(void)
     WNDCLASSW wc; memset(&wc,0,sizeof(wc));
     wc.lpfnWndProc=window_proc; wc.hInstance=GetModuleHandleW(0);
     wc.lpszClassName=L"AeolusNativeOrganConsole";
-    wc.hCursor=LoadCursorW(0,IDC_ARROW);
+    wc.hCursor=LoadCursorW(0,MAKEINTRESOURCEW(32512));
     wc.hbrBackground=(HBRUSH)(COLOR_WINDOW+1);
     RegisterClassW(&wc);
     _window=CreateWindowExW(0,wc.lpszClassName,L"Aeolus - Organ Console",
