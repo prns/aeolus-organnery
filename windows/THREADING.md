@@ -1,35 +1,46 @@
 # Windows threading dependency investigation
 
-## Why this is a blocking dependency
+## Findings from the actual clthreads API
 
-The application does not use threads only in one isolated module. The existing clthreads API is part of the engine's object model:
+Aeolus does not call the Win32 or C++ threading API directly. Its worker classes depend on Fons Adriaensen's separate `clthreads` C++ library.
 
-- Audio, Imidi, Model, Slave, and Iface derive from A_thread.
-- The application starts and prioritises these workers with thr_start(...).
-- Workers exchange events and heap-owned messages through send_event, put_event, get_event, get_event_timed, and ITC_ctrl::connect.
-- The audio worker requests a real-time scheduling policy; the MIDI and model workers attempt real-time scheduling and fall back to normal scheduling.
+The public `clthreads.h` API (version 2.4.0-6 source mirror inspected for this investigation) shows that the library is built on POSIX threads:
 
-Replacing only pthread_create-style calls would not be enough. The event/message transport, timed waits, shutdown/join behaviour, and scheduling interface must also work.
+- `P_thread` owns a `pthread_t`, exposes `thr_start(policy, priority, stacksize)`, and has a virtual `thr_main()`.
+- `A_thread` combines `P_thread` with `ITC_ctrl`.
+- `ITC_ctrl` provides event counters, message queues, `send_event()`, `get_event()`, `get_event_timed()`, and static `connect()`.
+- The synchronisation layer uses pthread mutexes and condition variables. Linux additionally gets a semaphore wrapper.
+- `thr_start()` and the underlying implementation also need review for POSIX scheduling and cancellation semantics; a pthread header alone is not proof that the library works correctly on Windows.
 
-## Findings
+In Aeolus, `Audio`, `Imidi`, `Model`, `Slave`, and `Iface` inherit from `A_thread`. The application uses the event/message transport for engine control, not just for thread startup. Message ownership and shutdown ordering therefore need to remain compatible.
 
-- Aeolus currently depends on Fons Adriaensen's C++ clthreads library, not a generic C threads.h wrapper.
-- A public mirror of the original clthreads source says it has moved to Codeberg. The mirror is archived, so it should not be treated as the authoritative upstream.
-- The Windows threading API is different from POSIX. Microsoft documents native thread creation and waiting through Win32 APIs; C++ std::thread is also a supported modern alternative. Neither is a drop-in replacement for the A_thread and ITC event/message API.
-- A separate cross-platform library such as PerformanC/CThreads supports Windows, but its API is not the Aeolus clthreads API. Adopting it would still require an adapter or a port of the Aeolus-facing classes.
+## Practical Windows build direction
 
-## Recommended approach
+For an initial Windows x64 port, MinGW-w64 with its POSIX-thread runtime is the least disruptive experiment:
 
-1. Retrieve and inspect the current clthreads source from its maintained upstream before deciding whether to fork it.
-2. Inventory the exact A_thread, event queue, message ownership, timed-wait, and priority APIs used by Aeolus.
-3. Prefer a small Windows implementation that preserves the existing clthreads public API, if the upstream implementation is tightly coupled to POSIX. This minimises changes in the synthesiser/model code.
-4. Map thread priorities deliberately. Do not assume POSIX SCHED_FIFO priorities have a direct Windows equivalent; use documented Windows scheduling facilities and test audio stability under CPU load.
-5. Add deterministic tests for event delivery, timed waits, worker shutdown, and message ownership before switching the audio/MIDI backends.
+1. Build a Windows-compatible `clthreads` library against the MinGW-w64 POSIX runtime.
+2. Patch and test the POSIX scheduling calls in clthreads. Unsupported real-time policies must fail safely or map to a documented Windows priority class; they must not silently claim real-time scheduling.
+3. Keep Aeolus's `A_thread` and `ITC_ctrl` call sites intact initially.
+4. Add tests for event delivery, message ownership, timed waits, repeated start/stop, and worker shutdown.
+5. Measure audio callback behaviour under CPU load before treating scheduling as acceptable.
 
-## Not yet decided
+This is a proposed route, not a verified build. The Windows pthread runtime does not by itself guarantee that the upstream clthreads implementation compiles or behaves correctly.
 
-- Whether to port clthreads itself or replace it with an internal compatibility layer.
-- Whether the Windows build will use MSVC or MinGW as its primary compiler.
-- Whether any upstream clthreads changes can be reused under its LGPL terms.
+## MSVC versus MinGW
 
-No third-party threading code has been copied into this repository. No Windows threading implementation or test has been committed yet.
+The current codebase is not ready for an MSVC build merely by changing compiler flags. A direct MSVC route would require either a supported pthread compatibility library plus fixes to clthreads, or a deliberate port of clthreads to Win32 primitives / C++ standard threading. That is a larger change because the condition-variable event protocol and message queues are part of the public API.
+
+The project should choose one primary Windows compiler before adding build files. For the first proof of concept, MinGW-w64 POSIX is the smaller engineering step; MSVC compatibility can be assessed after the engine and device backends build.
+
+## Licensing and provenance
+
+No third-party threading implementation has been copied into this repository. The clthreads source inspected for API research carries an LGPL notice. Any vendoring or modification must preserve its applicable notices and be reviewed against the exact upstream version and license text.
+
+## Remaining work
+
+- Confirm the exact clthreads revision used by the target Linux distributions and obtain its authoritative maintained source.
+- Build clthreads for x64 Windows and fix compile/runtime incompatibilities.
+- Verify the Aeolus worker lifecycle and event protocol with automated tests.
+- Only then connect the Windows audio and MIDI backends to the existing worker model.
+
+No Windows threading implementation or successful Windows build has been committed yet.
