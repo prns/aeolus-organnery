@@ -36,3 +36,21 @@ The first usable slice should be the main organ console only: start the engine, 
 ## Current status
 
 This document records the implementation boundary and acceptance sequence. There is not yet a native Win32 GUI class in the application. The current Windows executable still uses Tiface (the text interface). The GUI milestone is therefore not complete.
+
+
+## First native console slice (implemented)
+
+The Windows executable now starts `Wiface` from `windows/wiface.cc` instead
+of the console `Tiface`. This first native Win32/GDI window displays the
+instrument divisions and their stop mnemonics, draws active stops in a
+different state, and sends `MT_IFC_ELXOR` to the model when a stop is clicked.
+Model updates `MT_IFC_ELSET`, `MT_IFC_ELCLR` and `MT_IFC_GRCLR` update the
+window state on the interface thread.
+
+This is deliberately a first vertical slice, not a replacement for the full
+X11 interface: preset controls, transpose, tutti, settings dialogs, stop editing,
+DPI-aware relayout, accessibility metadata and richer labels remain to be
+ported. The window currently lays out up to eight divisions in two columns;
+very large instruments may need scrolling in a later pass. Windows CI checks
+compilation and linking; interactive behaviour still needs a Windows desktop
+test.
