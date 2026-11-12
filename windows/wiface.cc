@@ -36,8 +36,10 @@ LRESULT Wiface::dispatch(HWND w, UINT m, WPARAM wp, LPARAM lp)
     case WM_LBUTTONUP:
         toggle_at(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)); return 0;
     case WM_SIZE:
-        InvalidateRect(w, 0, TRUE); return 0;
+        _width = LOWORD(lp); _height = HIWORD(lp);
+        layout(); InvalidateRect(w, 0, TRUE); return 0;
     case WM_CLOSE:
+        aeolus_request_shutdown();
         _stop = true; DestroyWindow(w); return 0;
     case WM_DESTROY:
         _window = 0; PostQuitMessage(0); return 0;
