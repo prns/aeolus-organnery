@@ -331,21 +331,6 @@ int Audio::jack_callback (jack_nframes_t nframes)
 }
 
 
-#ifdef _WIN32
-void Audio::render_host_quantum (void *context, float **outputs, int nframes)
-{
-    static_cast<Audio *>(context)->render_block (outputs, nframes);
-}
-
-
-bool Audio::render_host_packet (float **outputs, unsigned int nframes)
-{
-    return _host_fifo &&
-           _host_fifo->pull (outputs, nframes, render_host_quantum, this);
-}
-#endif
-
-
 void Audio::render_block (float **outputs, int nframes)
 {
     proc_queue (_qnote);
@@ -506,6 +491,23 @@ void Audio::proc_jmidi (int tmax)
 
 
 #endif // !_WIN32
+
+
+#ifdef _WIN32
+void Audio::render_host_quantum (void *context, float **outputs, int nframes)
+{
+    static_cast<Audio *>(context)->render_block (outputs, nframes);
+}
+
+
+bool Audio::render_host_packet (float **outputs, unsigned int nframes)
+{
+    return _host_fifo &&
+           _host_fifo->pull (outputs, nframes, render_host_quantum, this);
+}
+#endif
+
+
 
 
 void Audio::proc_queue (Lfq_u32 *Q)
