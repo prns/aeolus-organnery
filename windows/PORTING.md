@@ -238,3 +238,10 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - The application lifecycle remains intentionally explicit: after opening, the future Windows application must connect the model/audio message routes and call `Audio::start()`; it then calls the adapter's blocking `run()` on the same thread used for COM initialization. `stop()` may be signalled from another thread.
 - Added a CI compile step for this adapter. It checks the source-level connection but does not instantiate an audio device or prove playback.
 - Device selection, exclusive mode, sample format conversion for non-float endpoints, device-loss recovery, and the application entry point are still outstanding.
+
+
+### 2026-11-12 — Tighten WASAPI format validation
+
+- The WASAPI host now checks that extensible float formats advertise 32 valid bits, not merely a 32-bit container. It also validates the average byte rate against the negotiated sample rate and block alignment before treating the endpoint buffer as interleaved float samples.
+- Removed an unused second interleaved scratch allocation; the host writes directly into the buffer returned by `IAudioRenderClient::GetBuffer`, while the planar render buffers remain preallocated.
+- The adapter and host compile successfully in the preceding Windows CI run. The stricter validation/removal change is awaiting its own CI result. No physical Windows audio endpoint has been exercised yet.
