@@ -44,3 +44,19 @@ No third-party threading implementation has been copied into this repository. Th
 - Only then connect the Windows audio and MIDI backends to the existing worker model.
 
 No Windows threading implementation or successful Windows build has been committed yet.
+
+
+## Vendored dependency and first Windows compile probe
+
+The upstream clthreads source has now been imported into
+`third_party/clthreads/` from `dmeliza/clthreads` revision
+`7b59da40f3cae5a86eb23bc806c2d32e128680c5`. Its original LGPL-2.1-or-later
+notices and COPYING file are retained. The imported source is not yet modified.
+
+The Windows Actions workflow now attempts to compile all six clthreads source
+units with the MSYS2 UCRT64 MinGW toolchain and POSIX thread support, then
+compiles the isolated `source/imidi.cc` translation unit against that header.
+This is the first concrete test of the proposed MinGW POSIX route. It does not
+yet establish that the full Aeolus worker model links or runs correctly.
+If the compiler rejects POSIX scheduling or timing APIs, those failures will
+be addressed in the dependency rather than hidden behind a dummy thread layer.
