@@ -109,7 +109,7 @@ void Audio::init_audio (void)
 
 bool Audio::init_host (unsigned int fsamp, unsigned int fsize, int nplay, bool bform)
 {
-    if (!fsamp || !fsize || (fsize % PERIOD) || nplay != (bform ? 4 : 2)) return false;
+    if (!fsamp || !fsize || nplay != (bform ? 4 : 2)) return false;
 
     _fsamp = fsamp;
     _fsize = fsize;
