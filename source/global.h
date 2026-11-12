@@ -25,38 +25,37 @@ extern bool x_opt;
 #define debug_nlf(M, ...) if (x_opt) { printf("%s[%d] %s: " M, __FILE__, __LINE__, __func__,  ##__VA_ARGS__); }
 #define debug(M, ...) if (x_opt) { printf("%s[%d] %s: " M "\n", __FILE__, __LINE__, __func__,  ##__VA_ARGS__); }
 
+// Use project-local names for byte order constants. The double-underscore
+// identifiers used by some C libraries are implementation-reserved and may
+// already be defined by Windows toolchains or third-party headers.
 #if defined(_WIN32)
-// Windows targets supported by this port are little-endian.
-#define __LITTLE_ENDIAN 1234
-#define __BIG_ENDIAN    4321
-#define __PDP_ENDIAN    3412
-#define __BYTE_ORDER    __LITTLE_ENDIAN
+#define AEOLUS_LITTLE_ENDIAN 1234
+#define AEOLUS_BIG_ENDIAN    4321
+#define AEOLUS_BYTE_ORDER    AEOLUS_LITTLE_ENDIAN
 #elif defined(__APPLE__)
 #include <machine/endian.h>
-#define __LITTLE_ENDIAN __DARWIN_LITTLE_ENDIAN
-#define __BIG_ENDIAN    __DARWIN_BIG_ENDIAN
-#define __PDP_ENDIAN    __DARWIN_PDP_ENDIAN
-#define __BYTE_ORDER    __DARWIN_BYTE_ORDER
+#define AEOLUS_LITTLE_ENDIAN __DARWIN_LITTLE_ENDIAN
+#define AEOLUS_BIG_ENDIAN    __DARWIN_BIG_ENDIAN
+#define AEOLUS_BYTE_ORDER    __DARWIN_BYTE_ORDER
 #else
 #include <endian.h>
+#define AEOLUS_LITTLE_ENDIAN __LITTLE_ENDIAN
+#define AEOLUS_BIG_ENDIAN    __BIG_ENDIAN
+#define AEOLUS_BYTE_ORDER    __BYTE_ORDER
 #endif
 
-#ifdef __BYTE_ORDER
-#if (__BYTE_ORDER == __LITTLE_ENDIAN)
+#if (AEOLUS_BYTE_ORDER == AEOLUS_LITTLE_ENDIAN)
 #define WR2(p,v) { (p)[0] = v; (p)[1] = v >> 8; }
 #define WR4(p,v) { (p)[0] = v; (p)[1] = v >> 8;  (p)[2] = v >> 16;  (p)[3] = v >> 24; }
 #define RD2(p) ((p)[0] + ((p)[1] << 8));
 #define RD4(p) ((p)[0] + ((p)[1] << 8) + ((p)[2] << 16) + ((p)[3] << 24));
-#elif (__BYTE_ORDER == __BIG_ENDIAN)
+#elif (AEOLUS_BYTE_ORDER == AEOLUS_BIG_ENDIAN)
 #define WR2(p,v) { (p)[1] = v; (p)[0] = v >> 8; }
 #define WR4(p,v) { (p)[3] = v; (p)[2] = v >> 8;  (p)[1] = v >> 16;  (p)[0] = v >> 24; }
 #define RD2(p) ((p)[1] + ((p)[0] << 8));
 #define RD4(p) ((p)[3] + ((p)[2] << 8) + ((p)[1] << 16) + ((p)[0] << 24));
 #else
-#error Byte order is not supported !
-#endif
-#else
-#error Byte order is undefined !
+#error Byte order is not supported or could not be determined.
 #endif
 
 #include "lfqueue.h"
@@ -170,4 +169,3 @@ enum Style
 
 
 #endif
-
