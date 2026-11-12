@@ -27,7 +27,9 @@
 #ifdef __linux__
 #include <zita-alsa-pcmi.h>
 #endif
+#ifndef _WIN32
 #include <jack/jack.h>
+#endif
 #include "asection.h"
 #include "division.h"
 #include "lfqueue.h"
@@ -44,7 +46,9 @@ public:
 #ifdef __linux__
     void  init_alsa (const char *device, int fsamp, int fsize, int nfrag);
 #endif
+#ifndef _WIN32
     void  init_jack (const char *server, bool bform, Lfq_u8 *qmidi);
+#endif
     void  start (void);
     // Render one host-provided audio block. The caller owns the output buffers.
     // This entry point contains no device-API calls and is suitable for WASAPI.
@@ -64,10 +68,14 @@ private:
 #ifdef __linux__
     void close_alsa (void);
 #endif
+#ifndef _WIN32
     void close_jack (void);
+#endif
     virtual void thr_main (void);
+#ifndef _WIN32
     void jack_shutdown (void);
     int  jack_callback (jack_nframes_t);
+#endif
     void proc_jmidi (int);
     void proc_queue (Lfq_u32 *);
     void proc_synth (int);
@@ -132,27 +140,35 @@ private:
         }
     }
 
+#ifndef _WIN32
     static void jack_static_shutdown (void *);
     static int  jack_static_callback (jack_nframes_t, void *);
+#endif
 
     const char     *_appname;
     uint16_t        _midimap [16];
     Lfq_u32        *_qnote;
     Lfq_u32        *_qcomm;
+#ifndef _WIN32
     Lfq_u8         *_qmidi;
+#endif
     volatile bool   _running;
 #ifdef __linux__
     Alsa_pcmi      *_alsa_handle;
 #endif
+#ifndef _WIN32
     jack_client_t  *_jack_handle;
     jack_port_t    *_jack_opport [8];
     jack_port_t    *_jack_midipt;
+#endif
     int             _policy;
     int             _abspri;
     int             _relpri;
+#ifndef _WIN32
     int             _jmidi_count;
     int             _jmidi_index;
     void           *_jmidi_pdata;
+#endif
     int             _hold;
     bool            _bform;
     int             _nplay;
