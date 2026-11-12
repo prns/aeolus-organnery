@@ -104,3 +104,10 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Identified MinGW-w64 with the POSIX thread runtime as the smallest initial Windows proof-of-concept route; this is a proposal, not a verified build.
 - Initialized the non-Linux opaque MIDI backend handoff in `Model::init_iface()` to null. This prevents an uninitialized pointer from being passed to the GUI/service boundary while a Windows MIDI implementation is still pending.
 - The ALSA-only `Imidi` implementation and remaining POSIX/JACK dependencies are still blockers. No Windows executable or successful Windows build has been produced.
+
+
+### 2026-11-12 — Extract host-independent audio block renderer
+
+- Added `Audio::render_block(float **outputs, int nframes)` as a device-API-independent entry point for one audio block. It consumes the existing note/command queues, updates keyboard state, renders the synth into caller-owned output buffers, and processes engine messages.
+- Routed both the JACK callback and the ALSA playback loop through this shared method. JACK MIDI remains handled by the existing JACK event path inside the synthesis loop; a future WASAPI host can call the same renderer with its own output buffers and no JACK client.
+- This is the first real audio-host seam, not a WASAPI implementation. `audio.h` still includes JACK headers, the JACK MIDI parser is still JACK-specific, and device lifecycle/sample-rate negotiation remain to be separated. No Windows build/test has been run.
