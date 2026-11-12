@@ -141,3 +141,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - `Audio::init_host()` now rejects a requested host block size that is not a multiple of `PERIOD`, in addition to checking sample rate and matching stereo/four-channel output topology.
 - WASAPI integration must negotiate a stable callback packet size that is a multiple of 64 frames (for example through the supported shared-mode engine-period API where available), or the renderer must first be redesigned to handle partial quanta with correct MIDI timestamp continuity. Do not simply pad every callback: that would alter the effective audio timeline.
 - This is a defensive validation, not proof of a compatible WASAPI endpoint. No Windows build or device test has been performed.
+
+
+### 2026-11-12 — First automated Windows x64 compile job
+
+- Added `.github/workflows/windows-core.yml`, a GitHub Actions job on `windows-latest` using the MSYS2 UCRT64 x64 GCC toolchain.
+- The job compiles six synthesis/support translation units (`exp2ap`, `rngen`, `scales`, `asection`, `reverb`, `rankwave`) and archives their object files as `libaeolus-core.a`. The artifact is uploaded as `aeolus-windows-x64-core`.
+- This is intentionally a **core compilation probe**, not the Aeolus Windows application: it does not link the model/audio/threading/app layers, does not include a GUI, WASAPI, ASIO, or USB-MIDI, and does not produce `Aeolus.exe`. Its purpose is to obtain the first real MSYS2/Windows compiler feedback on portable synthesis code before attempting the full application.
+- The workflow runs automatically on the next push to `windows-port` that changes source/windows/workflow files, and can also be started manually from GitHub Actions. Its result must be checked before calling the core Windows-compatible.
