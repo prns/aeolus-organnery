@@ -51,7 +51,6 @@ private:
     RenderCallback _callback;
     void *_context;
     float *_planes[4];
-    float *_interleaved;
 };
 #endif
 #endif
