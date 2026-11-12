@@ -110,7 +110,7 @@ jobs:
           mkdir -p build/stops-extract
           cd build/stops-extract
           ar x ../windows-package/stops.deb data.tar.xz
-          tar -xf data.tar.xz -C ../windows-package --strip-components=4 ./usr/share/aeolus/stops
+          tar -xf data.tar.xz -C ../windows-package --strip-components=3 ./usr/share/aeolus/stops
           tar -xOf data.tar.xz ./usr/share/doc/stops/copyright > ../windows-package/stops-COPYRIGHT
           cd ../..
           test -f build/windows-package/stops/Aeolus/definition
