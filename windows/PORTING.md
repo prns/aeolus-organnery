@@ -80,10 +80,10 @@ This file records the initial technical assessment and intended sequence only. N
 
 ### Next engineering steps
 
-1. Inspect and choose the Windows-compatible thread/event dependency or implement a small compatibility layer for the `clthreads` API used throughout the engine.
+1. Build and test the `clthreads` dependency for x64 Windows; see `windows/THREADING.md` for the API inventory and proposed MinGW-w64 POSIX route.
 2. Separate the synthesis processing loop from the JACK/ALSA device setup in `Audio`, then add the WASAPI host.
-3. Replace the ALSA-only `Imidi` implementation with a platform MIDI service; preserve the existing queue/message protocol so the model remains unchanged.
-4. Only after the service boundaries are stable, introduce the Windows application entry point and GUI host.
+3. Replace the ALSA-only `Imidi` implementation with a WinMM USB-MIDI service; preserve the existing queue/message protocol so the model remains unchanged.
+4. Only after the service boundaries are stable, introduce the Windows application entry point and native GUI host.
 
 ### Source inventory clarification
 
@@ -96,3 +96,11 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Guarded the ALSA sequencer transmit implementation in `source/model.cc`. Non-Linux builds retain the model-facing MIDI transmit methods as temporary no-op stubs until the native Windows MIDI service is connected.
 - This is an intermediate portability boundary, not functional Windows MIDI support. The Windows MIDI backend must replace these stubs before the port can be considered feature-complete.
 - No Windows compiler or build environment is available in this repository action, so compilation remains unverified.
+
+
+### 2026-11-12 — Threading API inventory and MIDI handoff safety
+
+- Inspected the public `clthreads.h` API and recorded the concrete `P_thread`, `A_thread`, `ITC_ctrl`, mutex/condition-variable, event, and message-queue requirements in `windows/THREADING.md`.
+- Identified MinGW-w64 with the POSIX thread runtime as the smallest initial Windows proof-of-concept route; this is a proposal, not a verified build.
+- Initialized the non-Linux opaque MIDI backend handoff in `Model::init_iface()` to null. This prevents an uninitialized pointer from being passed to the GUI/service boundary while a Windows MIDI implementation is still pending.
+- The ALSA-only `Imidi` implementation and remaining POSIX/JACK dependencies are still blockers. No Windows executable or successful Windows build has been produced.
