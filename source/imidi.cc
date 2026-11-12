@@ -19,6 +19,7 @@
 
 
 #include "imidi.h"
+#include <string.h>
 
 #ifdef __linux__
 
