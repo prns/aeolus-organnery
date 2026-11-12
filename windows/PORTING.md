@@ -119,3 +119,10 @@ The repository also contains files named `audiowin.cc/.h` and `midiwin.cc/.h`. T
 - Kept the shared synthesis renderer and the Linux JACK/ALSA implementations available. On Windows, `audio.h` no longer requires JACK types and `audio.cc` no longer compiles the JACK host implementation or JACK MIDI event parser.
 - This removes one direct audio-host dependency from the Windows compilation path, but does not yet provide a Windows device initializer, sample-rate/buffer negotiation, output-channel setup, or a complete Windows build. The current `Audio` class still needs a Windows host entry point that initializes the synthesis engine before calling `render_block()`.
 - Linux behaviour has not been runtime-tested in this environment; no Windows compiler/build was run.
+
+
+### 2026-11-12 — Host-managed audio format initialization
+
+- Added public `Audio::init_host(fsamp, fsize, nplay, bform)`. It validates a non-zero sample rate and block size and accepts the existing two-channel or four-channel render layouts, sets the engine's host format, and initializes the reverb/sections through the same `init_audio()` path used by Linux backends.
+- It deliberately does not allocate output buffers, start a thread, or open a device: a host such as WASAPI owns those responsibilities and supplies its output buffers to `render_block()`.
+- This is an engine setup seam, not a WASAPI implementation. There is not yet a Windows device lifecycle, callback/thread, device enumeration, sample-rate negotiation, or USB-MIDI input backend. No Windows build or runtime test has been performed.
