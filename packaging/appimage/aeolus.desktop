@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Aeolus
+Comment=Synthesised pipe organ emulator
+Exec=aeolus
+Icon=aeolus
+Categories=Audio;AudioVideo;Midi;
+Terminal=false
