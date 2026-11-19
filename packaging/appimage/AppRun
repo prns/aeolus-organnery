@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+APPDIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+export AEOLUS_LIBDIR="$APPDIR/usr/lib/aeolus"
+exec "$APPDIR/usr/bin/aeolus" -S "$APPDIR/usr/share/aeolus/stops" "$@"
